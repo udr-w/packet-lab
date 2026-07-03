@@ -11,7 +11,18 @@ from packetlab.resolver import HostResolver
 from packetlab.stats import PacketStats
 
 
-MAX_DISPLAYED_PACKETS = 20
+DEFAULT_MAX_ROWS = 20
+
+# Terminal lines consumed by everything that is not a packet row:
+# the stats panel (12-13 text lines + 2 border lines) and the table's
+# own title, header, and border lines.
+STATS_PANEL_LINES = 15
+TABLE_CHROME_LINES = 5
+
+
+def row_budget(terminal_height: int) -> int:
+    """How many packet rows fit on screen alongside the stats panel."""
+    return max(3, terminal_height - STATS_PANEL_LINES - TABLE_CHROME_LINES)
 
 
 def packet_row(packet: IcmpPacket, resolver: HostResolver) -> tuple[str, ...]:
@@ -27,6 +38,7 @@ def packet_row(packet: IcmpPacket, resolver: HostResolver) -> tuple[str, ...]:
 def build_packet_table(
     packets: list[IcmpPacket],
     resolver: HostResolver,
+    max_rows: int = DEFAULT_MAX_ROWS,
 ) -> Table:
     table = Table(title="ICMP Packets", expand=True)
     table.add_column("Time", style="cyan", no_wrap=True)
@@ -35,7 +47,7 @@ def build_packet_table(
     table.add_column("Protocol", style="magenta", no_wrap=True)
     table.add_column("Message", style="yellow")
 
-    for packet in packets[-MAX_DISPLAYED_PACKETS:]:
+    for packet in packets[-max_rows:]:
         table.add_row(*packet_row(packet, resolver))
 
     return table
@@ -76,8 +88,11 @@ def build_screen(
     resolver: HostResolver,
     interface: str,
     started_at: datetime,
+    max_rows: int = DEFAULT_MAX_ROWS,
 ) -> Group:
+    # Evidence first: the packet table is the raw observation, the stats
+    # panel is only interpretation of it. Never crop the evidence.
     return Group(
+        build_packet_table(packets, resolver, max_rows),
         build_stats_panel(stats, interface, started_at),
-        build_packet_table(packets, resolver),
     )

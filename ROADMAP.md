@@ -12,7 +12,7 @@ Version 1
 
 ICMP
 
-Status: IN PROGRESS — v1.1 done, v1.2 loopback in progress.
+Status: COMPLETE (v1.1 fundamentals, v1.2 loopback — closed 2026-07-04).
 
 Goal:
 
@@ -24,7 +24,7 @@ Version 2
 
 ARP
 
-Status: NOT STARTED.
+Status: NEXT — starts at the following lesson (see TASK.md).
 
 Goal:
 

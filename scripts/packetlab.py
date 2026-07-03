@@ -37,7 +37,7 @@ def main():
     from packetlab.parser import IcmpPacket, parse_tcpdump_line
     from packetlab.resolver import HostResolver
     from packetlab.stats import PacketStats
-    from packetlab.ui import build_screen
+    from packetlab.ui import build_screen, row_budget
 
     console = Console()
 
@@ -53,9 +53,19 @@ def main():
     process = start_icmp_capture(interface)
     stopped_by_user = False
 
+    def current_screen():
+        return build_screen(
+            packets,
+            stats,
+            resolver,
+            interface,
+            started_at,
+            row_budget(console.size.height),
+        )
+
     try:
         with Live(
-            build_screen(packets, stats, resolver, interface, started_at),
+            current_screen(),
             console=console,
             refresh_per_second=4,
             screen=True,
@@ -65,23 +75,20 @@ def main():
 
                 if packet is None:
                     stats.observe_unparsed(line)
-                    live.update(
-                        build_screen(packets, stats, resolver, interface, started_at)
-                    )
-                    continue
+                else:
+                    packets.append(packet)
+                    stats.observe(packet, resolver.my_ips)
 
-                packets.append(packet)
-                stats.observe(packet, resolver.my_ips)
-
-                live.update(
-                    build_screen(packets, stats, resolver, interface, started_at)
-                )
+                live.update(current_screen())
 
     except KeyboardInterrupt:
-        console.print("\nStopped.")
         process.terminate()
         process.wait(timeout=2)
         stopped_by_user = True
+        # The alternate screen vanished with everything on it; reprint the
+        # final state to the normal buffer so the evidence can be studied.
+        console.print("Stopped. Final capture state:")
+        console.print(current_screen())
 
     if not stopped_by_user:
         exit_code = process.wait()

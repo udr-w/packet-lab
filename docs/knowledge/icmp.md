@@ -54,12 +54,31 @@ a session log. Session narrative lives in `docs/lessons/`; current work lives in
 
 - Linux chooses an outgoing interface **based on the destination address and the
   routing table**, not based on which interface a tool is "watching."
-- Traffic to `127.0.0.1` matches the loopback route, so the kernel keeps it
-  entirely inside `lo`. It never reaches a physical NIC.
-- Consequence, confirmed by capture: pinging `127.0.0.1` produces **no packets**
-  on `wlp0s20f3` (the Wi-Fi interface) but **does** produce the full ICMP
-  request/reply exchange on `lo`. Two `ping -c 3 127.0.0.1` runs captured on `lo`
-  gave 12 packets: 6 Echo Requests, 6 Echo Replies, 0 unparsed lines.
+  Destination in, interface out; the source address is then chosen from the
+  selected interface (visible as `src` in `ip route get`).
+- `ip route get <addr>` asks the kernel for the exact routing decision without
+  sending a packet. Observed on this machine:
+  - `ip route get 127.0.0.1` → `local 127.0.0.1 dev lo table local src 127.0.0.1`
+  - `ip route get 8.8.8.8` → `8.8.8.8 via 192.168.8.1 dev wlp0s20f3 src 192.168.8.173`
+- Linux keeps **multiple routing tables**. The `local` table (own addresses,
+  broadcast) is consulted **before** the `main` table shown by plain `ip route`.
+  Route type `local` means "this destination IS this machine" — the packet is
+  looped back up the stack internally and never reaches any hardware driver.
+  Note the loopback route has **no `via`**: there is no next hop.
+- A packet capture is a **per-interface tap**, not a whole-machine view. Since a
+  `127.0.0.1` packet never touches the Wi-Fi driver, a capture there has nothing
+  to see. Confirmed directly (both by student and independently by assistant):
+  `ping -c 3 127.0.0.1` during a 30s capture on `wlp0s20f3` → **0 packets**,
+  while the same ping captured on `lo` → 6 packets / 3 requests / 3 replies.
+
+## ICMP direction lives in the Type field, not in id/seq
+
+- The ICMP header's first byte is **Type**: `8` = Echo Request, `0` = Echo
+  Reply. That is what tcpdump reads to label packets — essential on loopback,
+  where source and destination IPs are identical and carry no direction.
+- `id` and `seq` are **identical in a request and its matching reply** (the
+  replier echoes them back so the pinger can pair them). They match replies to
+  requests; they cannot distinguish direction.
 
 ## "Sent" vs "received" semantics break down for self-addressed traffic
 
@@ -74,6 +93,25 @@ a session log. Session narrative lives in `docs/lessons/`; current work lives in
   first branch and counts as **sent**, leaving received at 0. This is not a bug
   to patch away — it is a genuine, informative consequence of self-addressed
   traffic and a real limitation of a source/destination-based direction model.
+- **DECIDED (2026-07-04, closed):** the counters stay as-is (`Sent 6 /
+  Received 0` for a 3-ping loopback capture). Alternatives are choices, not
+  corrections: 6/6 breaks `sent + received = total`; 3/3 wrongly conflates ICMP
+  type with direction (the machine also received the requests and sent the
+  replies). General lesson: stats are interpretation with a domain of validity;
+  outside it, expose the raw evidence (the packet table) rather than massaging
+  the numbers. Do not reopen this design debate.
+
+## Predictable network interface names (why `wlp0s20f3`)
+
+- Modern Linux (systemd/udev) names interfaces from **stable hardware
+  topology**: `wl` = wireless LAN (`en` = ethernet), `p0` = PCI bus 0, `s20` =
+  slot/device 20 (hex `0x14`), `f3` = function 3. Verified on this machine:
+  `wlp0s20f3` ↔ `lspci 00:14.3` (Intel Wi-Fi 6 AX201); `enp0s31f6` ↔ `00:1f.6`.
+- The scheme is global; the specific name is per-machine (depends on where the
+  chip sits on the bus). Trade-off: old discovery-order names (`eth0`, `wlan0`)
+  could swap between boots when multiple NICs raced — ugly-but-stable beat
+  pretty-but-racy. `lo` is virtual, has no bus position, and keeps its classic
+  name.
 
 ---
 

@@ -1,46 +1,36 @@
 # Current Task
 
-## Version 1.2 — loopback ICMP
+## Version 2.0 — ARP fundamentals
 
-**Objective:** Explain why ICMP traffic to `127.0.0.1` appears on `lo` and never
-on the Wi-Fi interface (`wlp0s20f3`). This is a Linux networking milestone, not a
-software-architecture one.
+**Objective:** Understand how devices discover each other's MAC addresses on a
+LAN — why IP addresses alone are not enough to deliver a packet on the local
+network, and how ARP (Address Resolution Protocol) fills the gap.
 
-History: see `docs/lessons/v1.1-icmp-fundamentals.md` and
-`docs/lessons/v1.2-loopback.md`. Durable concepts: `docs/knowledge/icmp.md`.
+History: Version 1 (ICMP) is complete — see `docs/lessons/v1.1-*.md`,
+`docs/lessons/v1.2-*.md`. Durable concepts: `docs/knowledge/icmp.md`.
+Lesson narrative for this milestone opens in `docs/lessons/v2.0-arp.md`.
 
 ---
 
 ## Immediate next steps
 
-1. **Confirm `setcap`.** Verify the student ran
-   `sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump`. Check with
-   `getcap /usr/bin/tcpdump`. Once confirmed, the assistant can run captures
-   itself (no sudo) for independent verification. See "Non-root capture via
-   `setcap`" in `docs/knowledge/icmp.md`.
-2. **Real `127.0.0.1` test on `wlp0s20f3` (NOT YET RUN).** Capture on
-   `wlp0s20f3` while running an actual `ping -c 3 127.0.0.1`; confirm zero
-   packets appear. The earlier `wlp0s20f3` screenshot was a router ping, so this
-   prediction has never been directly tested.
-3. **Re-run the `lo` capture and read sent/received.** Run
-   `python3 scripts/packetlab.py lo` with `ping -c 3 127.0.0.1` now that the
-   `my_ips` fix (BUG 2) is in, and look at "Sent by me" / "Received by me". That
-   fix has not been live-verified yet.
-4. **Explain destination-route interface selection.** Get the student's own
-   synthesis of why Linux keeps `127.0.0.1` traffic inside `lo` instead of
-   sending it out the Wi-Fi NIC (routing decision is by destination address).
-5. **Discuss sent-vs-received for self-addressed traffic.** Because loopback
-   source == destination == `127.0.0.1`, every loopback packet now counts as
-   "sent" and none as "received". Not a bug to patch — a genuine consequence.
+1. **Theory first (no code):** two address layers — IP (logical, routed) vs MAC
+   (physical, LAN-local). Why the kernel needs a MAC to actually transmit a
+   frame to the router or a LAN neighbor. Define frame, broadcast,
+   request/reply shape of ARP.
+2. **Observe the ARP cache:** `ip neigh` — the kernel's IP→MAC table on the
+   student's machine. Relate entries to known devices (router `192.168.8.1`).
+3. **Predict + capture a live ARP exchange:** flush or age out an entry, ping
+   the router, capture `arp` traffic with tcpdump (assistant verifies first,
+   independently). Note: ARP is NOT carried in IP — the current viewer's
+   `icmp` filter and IP-based parser will not see it.
+4. **Extend the tool minimally** so ARP packets can be observed (capture filter
+   + a small ARP parser). Only enough tooling to make the observation easier.
 
----
+## Tooling debt (do before/while step 3)
 
-## Open conceptual questions (blocking Definition of Done)
-
-- Why does traffic to `127.0.0.1` stay inside `lo` instead of leaving via Wi-Fi?
-  (Student's final synthesis has not happened yet.)
-- What do "sent" and "received" even mean when a machine pings itself and source
-  and destination are the same address?
+- `packetlab` currently hard-codes the `icmp` tcpdump filter and an ICMP-only
+  parser. Needs an `arp` mode for this milestone.
 
 ---
 
@@ -48,20 +38,16 @@ History: see `docs/lessons/v1.1-icmp-fundamentals.md` and
 
 The student can explain:
 
-- What `lo` is and why `127.0.0.1` is special.
-- Why localhost packets never leave the machine.
-- Why capturing on `wlp0s20f3` shows no localhost ping traffic (still needs the
-  real direct test — step 2).
-- Why capturing on `lo` shows the localhost ICMP request/reply pairs.
-  (Observed: 12 packets / 6 requests / 6 replies / 0 unparsed.)
-- How Linux chooses an outgoing interface from the destination route.
-- What "sent" vs "received" means for self-addressed traffic.
+- Why a machine with the destination IP still needs a MAC address to deliver on
+  the LAN (two-layer addressing).
+- What an ARP request/reply looks like and why the request is a broadcast.
+- What the ARP cache (`ip neigh`) is for and what its entry states mean.
+- Why ARP never crosses the router (LAN-scoped, not routed).
 
 ---
 
 ## Teaching priority
 
-Experiments, not refactoring. Do not teach repository architecture unless the
-tool output itself becomes confusing. Do not move to ARP until this milestone is
-understood. (Roadmap: `ROADMAP.md`. Mentor style + standing directives:
-`AGENTS.md`.)
+Follow the new AGENTS.md **Pacing** rules: state scope at lesson start, one
+question per concept max, close the milestone the moment the Definition of Done
+is met. Experiments over refactoring. (Roadmap: `ROADMAP.md`.)

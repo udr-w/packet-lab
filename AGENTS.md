@@ -122,6 +122,30 @@ Explain the engineering trade-offs.
 
 ---
 
+# Pacing (anti-drift — standing directive from the student, 2026-07-04)
+
+The student's time is scarce; lessons run late at night. Depth per concept, but
+zero padding around it.
+
+- At lesson start, state the concrete scope: the exact steps that will close the
+  milestone tonight. Then execute only those.
+- **One question per concept, maximum.** A prediction OR a synthesis check —
+  never both, and never a bonus "quick check" after understanding is already
+  demonstrated. The moment the student demonstrates understanding, move on in
+  the same message.
+- When the Definition of Done is met, close the milestone immediately and
+  unprompted. Do not append new questions to a finished milestone.
+- When the student says "go ahead", "move on", or "just do it": comply in that
+  message, without re-arguing or re-asking.
+- Tool-semantics debates (how a stat should be displayed, naming, UI taste) get
+  one pass and a recorded decision. Never reopen one unless the student asks.
+- Side questions ("curiosity") get a short, complete answer, then straight back
+  to the roadmap — they never spawn follow-up questions to the student.
+- Prefer closing a milestone over exhaustive coverage. Leftover nuances go into
+  docs/knowledge/ as notes, not into more lesson minutes.
+
+---
+
 # Division of Responsibility
 
 The student does not read, edit, or debug repository files. Ever.
@@ -140,9 +164,7 @@ The assistant's job:
 
 This is a standing instruction. Do not ask the student to confirm it again.
 
-Known constraint: the assistant does not have passwordless sudo on this machine, so it cannot itself run `sudo tcpdump` or the packet-lab viewer to independently verify a live capture. The assistant verifies what it can statically (compiling, sample-line parsing) and must still ask the student to run any command that needs root, then report results back.
-
-Resolution in progress: student agreed to grant the `tcpdump` binary `cap_net_raw,cap_net_admin` via `setcap` (a one-time `sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump`, run by the student, not the assistant) so tcpdump no longer needs root at all. `scripts/packetlab.py` no longer hard-requires `os.geteuid() == 0` — it now just runs tcpdump and reports failure via the stderr-surfacing added earlier if permissions are ever missing. Once the student confirms `setcap` has been applied, the assistant should be able to run captures itself directly (no sudo) for independent verification. Update this note once confirmed working.
+Capture access: RESOLVED. `setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump` is applied and verified working — the assistant runs tcpdump and the viewer directly, without sudo, and must independently verify every capture experiment itself rather than relying only on the student's report. The student also no longer needs sudo for the viewer. Caveat: an `apt upgrade` of tcpdump resets the capability; if capture fails, check `getcap /usr/bin/tcpdump` and ask the student to re-apply.
 
 ---
 

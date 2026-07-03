@@ -16,6 +16,9 @@ For the roadmap see `ROADMAP.md`; for mentor style and standing directives see
   NOT need explaining — keep depth and pace on networking/OS concepts.
 - Prefers theory-before-prediction, jargon-defined-first teaching ("easier,
   closer and practical").
+- **Pacing is critical**: lessons often run late at night; the student has zero
+  tolerance for padding, repeat check questions, or reopened design debates.
+  Follow the AGENTS.md "Pacing" rules strictly.
 - **Never reads, edits, or debugs repository files.** That is entirely the
   assistant's job, including preparing/fixing tooling before asking the student
   to run anything. The student runs commands, observes, and answers conceptual
@@ -36,23 +39,21 @@ ourselves — one protocol at a time, fully, before moving on.
 
 ## Current state
 
-- **Milestone: Version 1.2 — loopback ICMP, mid-flight.** The immediate steps,
-  open questions, and Definition of Done live in `TASK.md`.
-- Confirmed so far: pinging `127.0.0.1` while capturing on `lo` yields 12 packets
-  / 6 Echo Requests / 6 Echo Replies / 0 unparsed. Still open: the direct
-  `wlp0s20f3` + `127.0.0.1` zero-packet test, the sent/received re-read, and the
-  student's own explanation of destination-route interface selection.
-- **Tooling status:**
-  - BUG 1 (tcpdump stderr hidden behind Rich's alternate screen) — fixed in
-    `packetlab/capture.py` + `scripts/packetlab.py`.
-  - BUG 2 (`127.0.0.1` missing from the resolver's `my_ips`) — fixed in
-    `packetlab/resolver.py`; not yet live-verified.
-  - The hard root requirement (`os.geteuid() == 0`) was removed from
-    `scripts/packetlab.py`. Non-root capture now relies on `setcap` on the
-    tcpdump binary — **the student has NOT yet confirmed running the setcap
-    command**, so the assistant still cannot capture independently.
-  - The assistant does NOT have passwordless sudo on this machine; the student
-    must run anything needing root until setcap is confirmed.
+- **Version 1 (ICMP) is COMPLETE** — v1.2 loopback closed 2026-07-04 with all
+  Definition-of-Done items met (wlp0s20f3 zero-packet test run for real,
+  routing synthesis given by the student, sent/received semantics decided:
+  counters stay as-is, do not reopen).
+- **Next milestone: Version 2.0 — ARP.** Not started; scope, steps, and
+  Definition of Done are in `TASK.md`. Open `docs/lessons/v2.0-arp.md` at the
+  start of that lesson.
+- **Capture access: RESOLVED.** `setcap` on tcpdump is confirmed applied and
+  live-verified — both the assistant and the student run captures without sudo.
+  The assistant now independently verifies every capture experiment itself.
+- **Tooling status:** viewer healthy; three bugs found and fixed across v1.2
+  (hidden tcpdump stderr; `127.0.0.1` missing from `my_ips`; packet table
+  cropped/vanishing — now evidence-first, height-adaptive, and reprinted after
+  Ctrl+C). Known debt: capture filter and parser are ICMP-only; ARP mode is
+  needed for v2.0 (tracked in `TASK.md`).
 
 ---
 
