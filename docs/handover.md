@@ -69,3 +69,8 @@ ourselves — one protocol at a time, fully, before moving on.
 - `scripts/lab-doctor.py` — documentation health monitor; enforces per-file size
   caps and flags anti-patterns (unbounded logs, "Completed" sections in
   TASK.md). Run `python3 scripts/lab-doctor.py` before each lesson.
+- **Version control:** the lab is its own git repo (branch `main`), pushed to the
+  private GitHub repo `github.com/udr-w/packet-lab`. `end lesson for today`
+  auto-commits and pushes after lab-doctor passes. Packet captures are gitignored
+  (`capture/`, `*.pcap`/`*.pcapng`/`*.cap`) — they may contain sensitive traffic
+  and must never be committed.
