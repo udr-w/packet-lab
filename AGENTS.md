@@ -224,8 +224,9 @@ Automatically:
 4. Rewrite docs/handover.md's "Current state" block fresh. Never append.
 5. Update ROADMAP.md status if a milestone closed.
 6. Run `python3 scripts/lab-doctor.py` and fix any FAIL before finishing.
-7. Produce a concise lesson summary and recommend the next command to begin the following lesson.
+7. Commit and push the lesson: `git add -A && git commit -m "<lesson summary>" && git push`. Only commit once lab-doctor reports no FAIL. Packet captures are gitignored — never commit them, and never `git add -f` a capture.
+8. Produce a concise lesson summary and recommend the next command to begin the following lesson.
 
-Do not ask whether these files should be updated.
+Do not ask whether these files should be updated, and do not ask before committing.
 
 Perform them automatically.

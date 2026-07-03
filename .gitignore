@@ -1,2 +1,10 @@
 __pycache__/
 *.py[cod]
+
+# Packet captures — may contain sensitive traffic (cleartext credentials,
+# cookies, tokens). Never commit. The capture/ dir is kept via .gitkeep.
+capture/*
+!capture/.gitkeep
+*.pcap
+*.pcapng
+*.cap
