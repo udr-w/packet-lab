@@ -10,8 +10,8 @@ For the roadmap see `ROADMAP.md`; for mentor style and standing directives see
 
 - BSc holder, 3+ years as a senior software engineer. Ubuntu user, comfortable
   with Python and the Linux terminal.
-- Prefers learning by building tools over using GUI applications; uses Codex in
-  VS Code / terminal, not the ChatGPT web UI.
+- Prefers learning by building tools over using GUI applications; uses AI tools in
+  terminal, not the web UIs or IDEs like VS Code.
 - Software-engineering fundamentals (functions, modules, general programming) do
   NOT need explaining — keep depth and pace on networking/OS concepts.
 - Prefers theory-before-prediction, jargon-defined-first teaching ("easier,
@@ -21,7 +21,7 @@ For the roadmap see `ROADMAP.md`; for mentor style and standing directives see
   to run anything. The student runs commands, observes, and answers conceptual
   questions.
 
-Project location: `/home/enactor/Documents/Scripts/packet-lab`
+Project location: `~/Documents/Scripts/packet-lab`
 
 ---
 
