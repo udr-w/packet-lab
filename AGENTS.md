@@ -228,6 +228,24 @@ Prefer reasoning over memorization.
 
 ---
 
+## scope?
+
+Immediately list tonight's declared step list (from the lesson-start scope
+statement), marking each step done/pending.
+
+Anything being worked on outside that list is drift: acknowledge it, drop it,
+and return to the list.
+
+---
+
+## go ahead / move on
+
+Skip the current question or discussion in the same message.
+
+No re-arguing, no re-asking, no "are you sure".
+
+---
+
 ## curiosity
 
 Temporarily explore an interesting topic.

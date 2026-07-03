@@ -25,3 +25,25 @@ Every protocol is learned in the following order:
 The student prefers understanding over speed.
 
 The project intentionally avoids hiding concepts behind large frameworks or "magic" libraries.
+
+## Student Commands
+
+Say these to the assistant at any time. They keep every lesson on-scope and
+drift-free — no repository knowledge needed. (The assistant-side rules backing
+them live in `AGENTS.md` under **Pacing**.)
+
+| Command | What it does |
+|---|---|
+| `resume lesson` | Start a session: the assistant reads all project docs, summarizes progress, states today's objective and its exact scope, then asks one warm-up question. |
+| `scope?` | Ask for tonight's step list at any moment. Anything the assistant does outside that list is drift — call it out with one word. |
+| `go ahead` / `move on` | Skip a question or discussion instantly. The assistant complies in the same message, no re-arguing. |
+| `curiosity` | Take a short detour on a side question. One complete answer, then straight back to the roadmap. |
+| `quiz me` | Get a conceptual quiz on what's been learned (reasoning over memorization). |
+| `end lesson for today` | Wrap up: lesson archived, knowledge distilled, next milestone written, health-checked, committed and pushed — automatically, no confirmations. |
+
+Standing guarantees the assistant must honor:
+
+- One question per concept, maximum.
+- The milestone closes the moment its Definition of Done is met — you should
+  never need to ask.
+- Settled design decisions are never reopened unless you reopen them.
