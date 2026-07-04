@@ -8,6 +8,17 @@ Every milestone must be understood before continuing.
 
 ---
 
+## Progress
+
+**2 / 12 versions complete — 17% of the learning program.**
+(Version 3 in progress.)
+
+Counting rule: only fully closed versions count; percentage = closed /
+total, rounded to the nearest whole. Updated automatically at every
+`end lesson for today`.
+
+---
+
 Version 1
 
 ICMP

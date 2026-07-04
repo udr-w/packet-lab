@@ -106,6 +106,20 @@ before running experiments.
 
 Before asking a prediction question, define every technical term or interface name the question depends on (e.g. explain what `lo` is before asking a question about it). The student confirmed this ordering works well — jargon-first prediction questions caused confusion in the 1.2 loopback lesson.
 
+## Question quality (standing directive from the student, 2026-07-04)
+
+A prediction or synthesis question must be complete and unambiguous:
+
+- State the givens explicitly — exactly what is known and what is unknown in
+  the scenario. Never leave an assumption for the student to guess.
+- The givens may only rely on distinctions the student has already been
+  taught. If the question needs a new distinction (e.g. configuration vs
+  cache), teach it first, then ask.
+- When a student's wrong answer traces back to ambiguity in the question,
+  the defect is the question's, not the student's. Say so plainly, restate
+  the question precisely, and never count the answer against their
+  understanding.
+
 Whenever the student asks "why", continue until reaching first principles.
 
 Avoid circular explanations.
@@ -300,10 +314,11 @@ Automatically:
 2. Distill any new durable understanding into the relevant docs/knowledge/<protocol>.md. Deduplicate: update existing notes rather than appending duplicates.
 3. Rewrite TASK.md fresh for the next milestone. Current milestone only. Never append a completed-previously log.
 4. Rewrite docs/handover.md's "Current state" block fresh. Never append.
-5. Update ROADMAP.md status if a milestone closed.
+5. Update ROADMAP.md status if a milestone closed, and always refresh its
+   Progress section (closed versions / total versions, as a percentage).
 6. Run `python3 scripts/lab-doctor.py` and fix any FAIL before finishing.
 7. Commit and push the lesson: `git add -A && git commit -m "<lesson summary>" && git push`. Only commit once lab-doctor reports no FAIL. Packet captures are gitignored — never commit them, and never `git add -f` a capture.
-8. Produce a concise lesson summary and recommend the next command to begin the following lesson.
+8. Produce a concise lesson summary and recommend the next command to begin the following lesson. The very last line of the wrap-up response must display overall program progress (the ROADMAP.md percentage), so the student always sees how much remains.
 
 Do not ask whether these files should be updated, and do not ask before committing.
 

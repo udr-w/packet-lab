@@ -43,22 +43,25 @@ ourselves — one protocol at a time, fully, before moving on.
 
 ## Current state
 
-- **Version 2.0 (ARP) is COMPLETE** — closed 2026-07-04, all Definition-of-Done
-  items met in one session (two-layer addressing, broadcast/unicast shape,
-  neighbour cache states probed live, LAN-scoping explained). Narrative:
-  `docs/lessons/v2.0-arp.md`; durable concepts: `docs/knowledge/arp.md`.
-  Version 1 (ICMP) closed earlier the same day.
-- **Next milestone: Version 3.0 — DNS.** Not started; scope, steps, and
-  Definition of Done are in `TASK.md`. Open `docs/lessons/v3.0-dns.md` at the
-  start of that lesson.
+- **Version 3.0 (DNS) is IN PROGRESS** — session 1 done 2026-07-04: theory
+  (chain, UDP 53, A/PTR, configuration-vs-cache) and resolver config
+  observed (127.0.0.53 stub → per-link 192.168.8.1). Next session OPENS with
+  the live dig×2 capture proving the banked cache prediction, then a PTR
+  lookup and the `dns` viewer mode. Full plan in `TASK.md`; narrative in
+  `docs/lessons/v3.0-dns.md`.
+- **Versions 1 (ICMP) and 2 (ARP) are COMPLETE** (both closed 2026-07-04).
+  Durable concepts: `docs/knowledge/icmp.md`, `arp.md`, `dns.md` (growing).
 - **Tooling status:** viewer healthy with `icmp` and `arp` modes
   (`python3 scripts/packetlab.py [mode] [interface]`). ARP mode shows frame
   MACs (`-e`), labels every MAC/IP beside the raw value (me / router /
   broadcast / device names via reverse DNS — nothing hardcoded), and the
   stats panel displays the exact tcpdump command running. Known debt: `dns`
   mode needed for v3.0 (tracked in `TASK.md`).
-- **New standing directives in AGENTS.md (2026-07-04):** "Evidence
-  Visibility" and "Human-readable output" — read both before teaching.
+- **Standing directives in AGENTS.md (all born 2026-07-04):** "Evidence
+  Visibility", "Human-readable output", "Question quality" (questions must
+  state givens completely, using only already-taught distinctions), and the
+  Pacing rules — read all before teaching. The end-lesson wrap-up must end
+  with the ROADMAP.md progress percentage as its final line.
 - **Capture access: RESOLVED.** `setcap` on tcpdump confirmed applied; both
   assistant and student capture without sudo. Caveat: an apt upgrade of
   tcpdump resets it — check `getcap /usr/bin/tcpdump` if capture fails.
