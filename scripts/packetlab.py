@@ -9,17 +9,26 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 
 DEFAULT_INTERFACE = "wlp0s20f3"
+MODES = ("icmp", "arp")
 
 
-def interface_from_args(argv: list[str]) -> str:
-    if len(argv) > 1:
-        return argv[1]
+def mode_and_interface_from_args(argv: list[str]) -> tuple[str, str]:
+    """Args in any order: a known mode name selects the mode ('icmp' default),
+    anything else is the interface."""
+    mode = "icmp"
+    interface = DEFAULT_INTERFACE
 
-    return DEFAULT_INTERFACE
+    for arg in argv[1:]:
+        if arg in MODES:
+            mode = arg
+        else:
+            interface = arg
+
+    return mode, interface
 
 
 def main():
-    interface = interface_from_args(sys.argv)
+    mode, interface = mode_and_interface_from_args(sys.argv)
 
     try:
         from rich.console import Console
@@ -33,35 +42,59 @@ def main():
         print(f"  python3 {Path(__file__)} {interface}")
         return
 
-    from packetlab.capture import iter_lines, start_icmp_capture
-    from packetlab.parser import IcmpPacket, parse_tcpdump_line
-    from packetlab.resolver import HostResolver
-    from packetlab.stats import PacketStats
-    from packetlab.ui import build_screen, row_budget
+    from packetlab.capture import iter_lines, start_arp_capture, start_icmp_capture
+    from packetlab.parser import parse_arp_line, parse_tcpdump_line
+    from packetlab.resolver import HostResolver, MacResolver
+    from packetlab.stats import ArpStats, PacketStats
+    from packetlab.ui import build_arp_screen, build_screen, row_budget
 
     console = Console()
 
-    resolver = HostResolver()
-    stats = PacketStats()
-    packets: list[IcmpPacket] = []
+    packets = []
     started_at = datetime.now()
 
+    if mode == "arp":
+        stats = ArpStats()
+        mac_resolver = MacResolver(interface)
+        parse_line = parse_arp_line
+        start_capture = start_arp_capture
+        observe_packet = stats.observe
+
+        def current_screen():
+            return build_arp_screen(
+                packets,
+                stats,
+                mac_resolver,
+                interface,
+                started_at,
+                row_budget(console.size.height, lines_per_row=2),
+            )
+
+    else:
+        resolver = HostResolver()
+        stats = PacketStats()
+        parse_line = parse_tcpdump_line
+        start_capture = start_icmp_capture
+
+        def observe_packet(packet):
+            stats.observe(packet, resolver.my_ips)
+
+        def current_screen():
+            return build_screen(
+                packets,
+                stats,
+                resolver,
+                interface,
+                started_at,
+                row_budget(console.size.height),
+            )
+
     console.print(f"Listening on interface: [bold]{interface}[/bold]")
-    console.print("Filter: ICMP only")
+    console.print(f"Filter: {mode.upper()} only")
     console.print("Press Ctrl+C to stop.")
 
-    process = start_icmp_capture(interface)
+    process = start_capture(interface)
     stopped_by_user = False
-
-    def current_screen():
-        return build_screen(
-            packets,
-            stats,
-            resolver,
-            interface,
-            started_at,
-            row_budget(console.size.height),
-        )
 
     try:
         with Live(
@@ -71,13 +104,13 @@ def main():
             screen=True,
         ) as live:
             for line in iter_lines(process):
-                packet = parse_tcpdump_line(line)
+                packet = parse_line(line)
 
                 if packet is None:
                     stats.observe_unparsed(line)
                 else:
                     packets.append(packet)
-                    stats.observe(packet, resolver.my_ips)
+                    observe_packet(packet)
 
                 live.update(current_screen())
 

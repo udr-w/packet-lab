@@ -1,8 +1,8 @@
-"""Packet counters for the ICMP lesson."""
+"""Packet counters for the ICMP and ARP lessons."""
 
 from dataclasses import dataclass
 
-from packetlab.parser import IcmpPacket
+from packetlab.parser import ArpPacket, IcmpPacket
 
 
 @dataclass
@@ -40,3 +40,31 @@ class PacketStats:
     @property
     def request_reply_gap(self) -> int:
         return self.echo_requests - self.echo_replies
+
+
+@dataclass
+class ArpStats:
+    total: int = 0
+    requests: int = 0
+    replies: int = 0
+    broadcast_frames: int = 0
+    unicast_frames: int = 0
+    unparsed_lines: int = 0
+    last_unparsed: str = ""
+
+    def observe(self, packet: ArpPacket) -> None:
+        self.total += 1
+
+        if packet.operation == "Request":
+            self.requests += 1
+        else:
+            self.replies += 1
+
+        if packet.is_broadcast:
+            self.broadcast_frames += 1
+        else:
+            self.unicast_frames += 1
+
+    def observe_unparsed(self, line: str) -> None:
+        self.unparsed_lines += 1
+        self.last_unparsed = line

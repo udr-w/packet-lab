@@ -1,36 +1,42 @@
 # Current Task
 
-## Version 2.0 — ARP fundamentals
+## Version 3.0 — DNS fundamentals
 
-**Objective:** Understand how devices discover each other's MAC addresses on a
-LAN — why IP addresses alone are not enough to deliver a packet on the local
-network, and how ARP (Address Resolution Protocol) fills the gap.
+**Objective:** Understand how names become IP addresses — the resolution
+chain from an application's question to a DNS server's answer, observed as
+real UDP packets on the student's machine.
 
-History: Version 1 (ICMP) is complete — see `docs/lessons/v1.1-*.md`,
-`docs/lessons/v1.2-*.md`. Durable concepts: `docs/knowledge/icmp.md`.
-Lesson narrative for this milestone opens in `docs/lessons/v2.0-arp.md`.
+History: Version 1 (ICMP) and Version 2 (ARP) are complete — see
+`docs/lessons/`. Durable concepts: `docs/knowledge/icmp.md`,
+`docs/knowledge/arp.md`. Lesson narrative for this milestone opens in
+`docs/lessons/v3.0-dns.md`.
+
+Hooks already earned in earlier lessons: ping sends nothing until the name
+resolves (v2.0); the router doubles as the LAN's DNS server and answers
+reverse lookups with DHCP-registered device names (v2.0, powers the viewer's
+labels); friendly names in the ICMP viewer come from reverse DNS (v1.x).
 
 ---
 
 ## Immediate next steps
 
-1. **Theory first (no code):** two address layers — IP (logical, routed) vs MAC
-   (physical, LAN-local). Why the kernel needs a MAC to actually transmit a
-   frame to the router or a LAN neighbor. Define frame, broadcast,
-   request/reply shape of ARP.
-2. **Observe the ARP cache:** `ip neigh` — the kernel's IP→MAC table on the
-   student's machine. Relate entries to known devices (router `192.168.8.1`).
-3. **Predict + capture a live ARP exchange:** flush or age out an entry, ping
-   the router, capture `arp` traffic with tcpdump (assistant verifies first,
-   independently). Note: ARP is NOT carried in IP — the current viewer's
-   `icmp` filter and IP-based parser will not see it.
-4. **Extend the tool minimally** so ARP packets can be observed (capture filter
-   + a small ARP parser). Only enough tooling to make the observation easier.
+1. **Theory first (no code):** the resolution chain — application → stub
+   resolver → configured DNS server (the router) → the world. Define: query/
+   response, record types (A, PTR), UDP port 53, why DNS rides on UDP.
+   Where the server address came from (DHCP, seen in v2.0).
+2. **Observe the machine's resolver config:** `resolvectl status` (or
+   `/etc/resolv.conf` and where it points) — who actually answers this
+   machine's questions.
+3. **Predict + capture a live DNS exchange:** `dig` a fresh name (and a
+   reverse PTR lookup) while capturing UDP port 53. Assistant verifies the
+   capture path first, independently. Prediction before each observation.
+4. **Extend the viewer minimally** with a `dns` mode (capture filter +
+   parser for query/response, showing name, type, answer) following the
+   established mode pattern and the human-readable-labels rule.
 
-## Tooling debt (do before/while step 3)
+## Tooling debt
 
-- `packetlab` currently hard-codes the `icmp` tcpdump filter and an ICMP-only
-  parser. Needs an `arp` mode for this milestone.
+- Viewer has `icmp` and `arp` modes only; `dns` mode needed for step 3–4.
 
 ---
 
@@ -38,16 +44,19 @@ Lesson narrative for this milestone opens in `docs/lessons/v2.0-arp.md`.
 
 The student can explain:
 
-- Why a machine with the destination IP still needs a MAC address to deliver on
-  the LAN (two-layer addressing).
-- What an ARP request/reply looks like and why the request is a broadcast.
-- What the ARP cache (`ip neigh`) is for and what its entry states mean.
-- Why ARP never crosses the router (LAN-scoped, not routed).
+- The resolution chain: who asks whom, in what order, and where the DNS
+  server address came from.
+- What a DNS query and response look like on the wire (UDP 53, id matching,
+  question/answer sections).
+- A vs PTR lookups — forward and reverse resolution (already met PTR via the
+  viewer's device names).
+- Where caching happens and why repeated lookups don't hit the network.
 
 ---
 
 ## Teaching priority
 
-Follow the new AGENTS.md **Pacing** rules: state scope at lesson start, one
-question per concept max, close the milestone the moment the Definition of Done
-is met. Experiments over refactoring. (Roadmap: `ROADMAP.md`.)
+Follow AGENTS.md **Pacing**, **Evidence Visibility**, and **Human-readable
+output** rules: state scope at lesson start, one question per concept max,
+quote any assistant-side evidence in-message, label unreadable values in
+tool output, close the milestone the moment the DoD is met.

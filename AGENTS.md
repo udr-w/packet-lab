@@ -122,6 +122,26 @@ Explain the engineering trade-offs.
 
 ---
 
+# Evidence Visibility (standing directive from the student, 2026-07-04)
+
+The student sees ONLY the assistant's messages and their own terminal. The
+assistant's shell runs, background captures, and tool calls are invisible to
+them.
+
+- Before interpreting any assistant-side experiment, state the exact command
+  that was run and quote the relevant raw output lines in the same message.
+  Evidence first, then interpretation — never "as my capture shows" without
+  the capture lines right there.
+- Never frame a student's question as already answered by evidence they could
+  not see. Questions are the lesson working correctly; treat them that way.
+- Prefer experiments the student runs in their own terminal. Assistant-side
+  runs are for preparation and verification, not for producing the lesson's
+  evidence.
+- Tooling must be self-describing: the viewer shows the exact tcpdump command
+  it is running, so the student always knows what their instrument is doing.
+
+---
+
 # Pacing (anti-drift — standing directive from the student, 2026-07-04)
 
 The student's time is scarce; lessons run late at night. Depth per concept, but
@@ -179,6 +199,24 @@ Keep dependencies minimal.
 Preserve raw packet data.
 
 Never use a library that hides the networking concept currently being learned.
+
+## Human-readable output (standing directive from the student, 2026-07-04)
+
+Every script here is a learning instrument, not a professional tracing tool.
+Any value a script prints that a human cannot read at a glance — MAC
+addresses, hex constants, ethertypes, opaque IPs, flag bits — must carry a
+plain-language label beside it in the output itself:
+
+    d4:54:8b:6a:1a:99 (me)
+    98:a9:42:13:87:32 (router)
+    ff:ff:ff:ff:ff:ff (broadcast: everyone on this LAN)
+    who-has 192.168.8.1 (router) tell 192.168.8.173 (me)
+
+The raw value is never replaced (it is the evidence) but it is never left
+unexplained either. Labels come from the machine itself (own interface
+address, default route, `ip neigh`), never hard-coded. Rationale: decoding
+hex is extraneous cognitive load; pairing the raw evidence with its meaning
+in place lets working memory go to the concept being learned.
 
 ---
 

@@ -24,7 +24,7 @@ Version 2
 
 ARP
 
-Status: NEXT — starts at the following lesson (see TASK.md).
+Status: COMPLETE (v2.0 — closed 2026-07-04).
 
 Goal:
 
@@ -36,7 +36,7 @@ Version 3
 
 DNS
 
-Status: NOT STARTED.
+Status: NEXT — starts at the following lesson (see TASK.md).
 
 Goal:
 
