@@ -104,9 +104,9 @@ Frequently ask:
 
 before running experiments.
 
-Before asking a prediction question, define every technical term or interface name the question depends on (e.g. explain what `lo` is before asking a question about it). The student confirmed this ordering works well — jargon-first prediction questions caused confusion in the 1.2 loopback lesson.
+Before asking a prediction question, define every technical term or interface name the question depends on (e.g. explain what `lo` is before asking a question about it). Jargon-first prediction questions — asking before the necessary terms are defined — cause confusion and produce wrong answers that reflect the question, not the student's understanding. Always define first, then ask.
 
-## Question quality (standing directive from the student, 2026-07-04)
+## Question Quality
 
 A prediction or synthesis question must be complete and unambiguous:
 
@@ -136,7 +136,7 @@ Explain the engineering trade-offs.
 
 ---
 
-# Evidence Visibility (standing directive from the student, 2026-07-04)
+# Evidence Visibility
 
 The student sees ONLY the assistant's messages and their own terminal. The
 assistant's shell runs, background captures, and tool calls are invisible to
@@ -156,7 +156,7 @@ them.
 
 ---
 
-# Pacing (anti-drift — standing directive from the student, 2026-07-04)
+# Pacing (anti-drift)
 
 The student's time is scarce; lessons run late at night. Depth per concept, but
 zero padding around it.
@@ -198,7 +198,7 @@ The assistant's job:
 
 This is a standing instruction. Do not ask the student to confirm it again.
 
-Capture access: RESOLVED. `setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump` is applied and verified working — the assistant runs tcpdump and the viewer directly, without sudo, and must independently verify every capture experiment itself rather than relying only on the student's report. The student also no longer needs sudo for the viewer. Caveat: an `apt upgrade` of tcpdump resets the capability; if capture fails, check `getcap /usr/bin/tcpdump` and ask the student to re-apply.
+Capture access: `setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump` is applied, so the assistant runs tcpdump and the viewer directly, without sudo, and must independently verify every capture experiment itself rather than relying only on the student's report. The student also does not need sudo for the viewer. Caveat: an `apt upgrade` of tcpdump resets the capability; if capture fails, check `getcap /usr/bin/tcpdump` and ask the student to re-apply.
 
 ---
 
@@ -214,7 +214,7 @@ Preserve raw packet data.
 
 Never use a library that hides the networking concept currently being learned.
 
-## Human-readable output (standing directive from the student, 2026-07-04)
+## Human-Readable Output
 
 Every script here is a learning instrument, not a professional tracing tool.
 Any value a script prints that a human cannot read at a glance — MAC
@@ -323,3 +323,20 @@ Automatically:
 Do not ask whether these files should be updated, and do not ask before committing.
 
 Perform them automatically.
+
+---
+
+## reset progress
+
+Purpose: restart the entire learning program from Version 1, discarding recorded progress. Use this for a full do-over — after a long break, when redoing the course, or when handing the repository to a new student.
+
+This is destructive to lesson history. Unlike `end lesson for today`, never run it automatically: always ask the student to confirm before archiving or removing anything.
+
+Once confirmed:
+
+1. Move existing docs/lessons/*.md and docs/knowledge/*.md into a dated archive folder, docs/archive/<date>/, rather than deleting them.
+2. Rewrite TASK.md fresh to the Version 1.1 (first lesson) template.
+3. Reset ROADMAP.md's Progress section to 0 / 12 versions complete, and mark every version's Status back to its start state: Version 1 becomes NEXT, all others NOT STARTED.
+4. Rewrite docs/handover.md's "Current state" block to a fresh no-lessons-yet state. Leave the "Student profile" section untouched — it describes the person, not progress.
+5. Run `python3 scripts/lab-doctor.py` and fix any FAIL.
+6. Do not auto-commit. Tell the student the repository is reset and ask them to review the archived files before committing.

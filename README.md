@@ -26,6 +26,8 @@ The student prefers understanding over speed.
 
 The project intentionally avoids hiding concepts behind large frameworks or "magic" libraries.
 
+First time here? See `docs/SETUP.md` for environment setup (prerequisites, capture permissions, first run) before starting a lesson.
+
 ## Student Commands
 
 Say these to the assistant at any time. They keep every lesson on-scope and
@@ -40,6 +42,7 @@ them live in `AGENTS.md` under **Pacing**.)
 | `curiosity` | Take a short detour on a side question. One complete answer, then straight back to the roadmap. |
 | `quiz me` | Get a conceptual quiz on what's been learned (reasoning over memorization). |
 | `end lesson for today` | Wrap up: lesson archived, knowledge distilled, next milestone written, health-checked, committed and pushed — automatically, no confirmations. |
+| `reset progress` | Wipe all recorded progress and restart the whole 12-version program from Version 1. Asks for confirmation first, since it archives lesson history — unlike the other automatic commands. |
 
 Standing guarantees the assistant must honor:
 
