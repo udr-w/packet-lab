@@ -239,8 +239,8 @@ checksum, retention, and status. Detail:
 
 - **96 unit tests** over the safety mechanisms (accept + reject paths).
 - **32 conformance evals** across six categories — `alignment`, `tool_safety`,
-  `injection`, `recovery`, `teaching` — testing the *enforcement points*, not
-  model quality. A fixture is a JSON file, not code.
+  `injection`, `recovery`, `teaching`, `personalization` — testing the
+  *enforcement points*, not model quality. A fixture is a JSON file, not code.
   [`docs/evaluation-strategy.md`](docs/evaluation-strategy.md).
 - **Hash-chained JSONL traces**: `lab inspect <run-id>` (with `--timeline` /
   `--verify`) reconstructs a run from objective to mastery result. Replay is
@@ -321,7 +321,8 @@ agent instructions. Detail:
 # python3-rich. Grant capture capability without sudo:
 sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump
 
-git clone <repo-url> packet-lab && cd packet-lab
+git clone https://github.com/udr-w/packet-lab.git
+cd packet-lab
 
 ./packet-lab.sh doctor      # health: doc caps + curriculum/roadmap consistency
 ./packet-lab.sh test        # 96 unit tests
