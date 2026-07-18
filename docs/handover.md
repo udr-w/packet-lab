@@ -62,16 +62,25 @@ ourselves — one protocol at a time, fully, before moving on.
   state givens completely, using only already-taught distinctions), and the
   Pacing rules — read all before teaching. The end-lesson wrap-up must end
   with the ROADMAP.md progress percentage as its final line.
-- **Control plane (added in an engineering session, not a lesson):** a
-  deterministic control plane lives in `packetlab/lab/`, driven by
-  `python3 -m packetlab.lab ...` (or `./packet-lab.sh`). It provides the
-  Curriculum Governor (lesson state machine, scope, budgets), the learner
-  model, the restricted runner, the generated-tool lifecycle, and hash-chained
-  run traces. See the new AGENTS.md "Curriculum Governor" section for how to
-  use it during a lesson, and `docs/architecture.md` for the full picture.
-  Verify health with `python3 -m packetlab.lab doctor`; tests
-  (`./packet-lab.sh test`, 96) and evals (`./packet-lab.sh eval`, 32) pass.
-  This did not change lesson progress — DNS (v3.0) is still where it was.
+- **Control plane + multi-learner foundation: MERGED into `main`** (PR #1,
+  CI green, 2026-07-18). A deterministic control plane lives in `packetlab/lab/`,
+  driven by `python3 -m packetlab.lab ...` (or `./packet-lab.sh`): the Curriculum
+  Governor (lesson state machine, scope, budgets), the concept-level learner
+  model, the restricted runner, the generated-tool lifecycle, hash-chained run
+  traces, and **per-learner isolation** (each engineer has an isolated profile
+  under `state/learners/<id>/`; the active learner shows in every command and
+  trace). Health: `python3 -m packetlab.lab doctor`; tests
+  (`./packet-lab.sh test`, 96) and evals (`./packet-lab.sh eval`, 32) pass. See
+  AGENTS.md ("Curriculum Governor" + "Multi-learner context isolation") and
+  `docs/architecture.md`. This did NOT change lesson progress — DNS (v3.0) is
+  still where it was.
+- **Next phase = real learner usage, not more architecture.** The agentic
+  control plane and multi-learner foundation are complete and merged; the
+  architecture work is done for now. The next step is running actual lessons
+  through it (start with `learner create <id>`, then resume the v3.0 DNS lesson
+  per TASK.md). Optional roadmap items (shared tool registry, profile renaming,
+  namespace isolation, separate-model grader) are deferred, not pending — do not
+  build them speculatively; let real lesson usage drive what's needed next.
 - **Capture access: RESOLVED.** `setcap` on tcpdump confirmed applied; both
   assistant and student capture without sudo. Caveat: an apt upgrade of
   tcpdump resets it — check `getcap /usr/bin/tcpdump` if capture fails.
