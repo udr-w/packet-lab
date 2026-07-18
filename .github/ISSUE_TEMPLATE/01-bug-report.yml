@@ -1,0 +1,76 @@
+name: Bug report
+description: Report a reproducible problem with Packet Lab
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem.
+
+        Please remove passwords, tokens, public IP addresses, MAC addresses,
+        hostnames, packet payloads, and other private information before submitting.
+
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system and version
+      description: Include the distribution and version.
+      placeholder: Ubuntu 24.04 LTS
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Run `python3 --version`.
+      placeholder: Python 3.12.3
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command executed
+      description: Enter the exact command that produced the problem.
+      placeholder: ./packet-lab.sh doctor
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-result
+    attributes:
+      label: Expected result
+      description: What did you expect Packet Lab to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-result
+    attributes:
+      label: Actual result
+      description: What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: trace
+    attributes:
+      label: Sanitized trace or output
+      description: |
+        Paste any relevant output after removing secrets and private packet data.
+        Leave this blank when no output is available.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy-confirmation
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed secrets and private packet data from this report.
+          required: true
