@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "comment": "Structured twin of ROADMAP.md. Lessons v1.1-v3.0 are fully specified because they exist (see docs/lessons/). Versions 4-12 are planned stubs: scope and budgets are filled in when a version opens, never invented in advance.",
+  "concepts": {
+    "icmp.capture-basics": "What packet capture is; tcpdump sees copies of frames the NIC handled",
+    "icmp.echo-request-reply": "ICMP echo request/reply pairing via id and sequence numbers",
+    "icmp.packet-direction": "Determining sent-by-me vs received-by-me from source/destination addresses",
+    "icmp.loopback": "The lo interface: local delivery that never touches hardware",
+    "icmp.routing-decision": "ip route get: how the kernel chooses interface and next hop before sending",
+    "arp.ip-vs-mac": "Two address layers: routed end-to-end IP vs one-hop hardware MAC",
+    "arp.frame": "The layer-2 envelope, rebuilt at every hop around the same IP packet",
+    "arp.request-broadcast": "ARP requests are broadcast out of necessity; replies are unicast",
+    "arp.next-hop-resolution": "ARP resolves the next hop's MAC, never the final destination's",
+    "arp.neighbour-cache": "The kernel neighbour table: REACHABLE/STALE/FAILED, verification trade-offs",
+    "dns.resolution-chain": "Application to stub resolver to router to upstream: who asks whom and why",
+    "dns.configuration-vs-cache": "DHCP-configured server address vs cached answers with TTLs",
+    "dns.stub-resolver": "systemd-resolved at 127.0.0.53: local caching stub reached over loopback",
+    "dns.udp-53": "DNS rides UDP port 53; why a handshake would be wasteful for one-datagram exchanges",
+    "dns.record-types": "A (name to IPv4) and PTR (IP to name) records; forward vs reverse lookups",
+    "dns.query-id-matching": "Query IDs pair responses to questions on a connectionless transport",
+    "dns.caching-ttl": "Caching at every level of the chain; TTL bounds how long answers may be kept"
+  },
+  "lessons": [
+    {
+      "lesson_id": "v1.1",
+      "title": "ICMP fundamentals",
+      "status": "complete",
+      "objective": "Understand packet capture, packet direction, and ICMP echo request/reply behaviour by observing real pings.",
+      "concepts": ["icmp.capture-basics", "icmp.echo-request-reply", "icmp.packet-direction"],
+      "prerequisites": [],
+      "in_scope": ["icmp.capture-basics", "icmp.echo-request-reply", "icmp.packet-direction"],
+      "out_of_scope": ["arp.request-broadcast", "dns.resolution-chain", "tcp", "tls", "http"],
+      "permitted_categories": ["observe_network", "ping", "capture", "read_system_file"],
+      "budgets": {"max_steps": 25, "max_retries": 3, "max_generated_tools": 2, "max_execution_seconds": 300},
+      "completion_criteria": [
+        "Student explains how tcpdump observes packets without being the sender or receiver",
+        "Student explains request/reply pairing via id and sequence",
+        "Student determines packet direction from addresses, with a live capture as evidence"
+      ]
+    },
+    {
+      "lesson_id": "v1.2",
+      "title": "ICMP over loopback",
+      "status": "complete",
+      "objective": "Understand the loopback interface and the kernel routing decision that selects it.",
+      "concepts": ["icmp.loopback", "icmp.routing-decision"],
+      "prerequisites": ["v1.1"],
+      "in_scope": ["icmp.loopback", "icmp.routing-decision"],
+      "out_of_scope": ["arp.request-broadcast", "dns.resolution-chain", "tcp"],
+      "permitted_categories": ["observe_network", "ping", "capture", "read_system_file"],
+      "budgets": {"max_steps": 25, "max_retries": 3, "max_generated_tools": 2, "max_execution_seconds": 300},
+      "completion_criteria": [
+        "Student explains why loopback traffic never reaches hardware",
+        "Student reads ip route get output and explains the interface selection"
+      ]
+    },
+    {
+      "lesson_id": "v2.0",
+      "title": "ARP",
+      "status": "complete",
+      "objective": "Understand how devices discover MAC addresses on a LAN.",
+      "concepts": ["arp.ip-vs-mac", "arp.frame", "arp.request-broadcast", "arp.next-hop-resolution", "arp.neighbour-cache"],
+      "prerequisites": ["v1.1", "v1.2"],
+      "in_scope": ["arp.ip-vs-mac", "arp.frame", "arp.request-broadcast", "arp.next-hop-resolution", "arp.neighbour-cache"],
+      "out_of_scope": ["dns.resolution-chain", "tcp", "vlan", "spanning-tree"],
+      "permitted_categories": ["observe_network", "ping", "capture", "read_system_file", "modify_neighbour_cache"],
+      "budgets": {"max_steps": 30, "max_retries": 3, "max_generated_tools": 2, "max_execution_seconds": 300},
+      "completion_criteria": [
+        "Student places all four addresses (src/dst IP and MAC) correctly in a frame diagram",
+        "Student predicts whose MAC an ARP request asks for when pinging a remote IP",
+        "Student explains the neighbour cache states and the STALE re-verification trade-off"
+      ]
+    },
+    {
+      "lesson_id": "v3.0",
+      "title": "DNS fundamentals",
+      "status": "in_progress",
+      "objective": "Understand how names become IP addresses: the resolution chain from application question to DNS answer, observed as real UDP packets.",
+      "concepts": ["dns.resolution-chain", "dns.configuration-vs-cache", "dns.stub-resolver", "dns.udp-53", "dns.record-types", "dns.query-id-matching", "dns.caching-ttl"],
+      "prerequisites": ["v1.1", "v1.2", "v2.0"],
+      "in_scope": ["dns.resolution-chain", "dns.configuration-vs-cache", "dns.stub-resolver", "dns.udp-53", "dns.record-types", "dns.query-id-matching", "dns.caching-ttl"],
+      "out_of_scope": ["dnssec", "dns-over-https", "tcp", "tls", "recursive-server-internals"],
+      "permitted_categories": ["observe_network", "dns_query", "ping", "capture", "read_system_file"],
+      "budgets": {"max_steps": 30, "max_retries": 3, "max_generated_tools": 2, "max_execution_seconds": 300},
+      "completion_criteria": [
+        "Student explains the resolution chain and where the server address came from",
+        "Student explains query/response shape on the wire: UDP 53, id matching, question/answer sections",
+        "Student explains A vs PTR lookups",
+        "Student explains where caching happens, with the dig-twice capture as evidence"
+      ]
+    },
+    {"lesson_id": "v4.0", "title": "TCP", "status": "planned", "objective": "Understand reliable communication.", "concepts": [], "prerequisites": ["v3.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
+    {"lesson_id": "v5.0", "title": "UDP", "status": "planned", "objective": "Understand connectionless communication.", "concepts": [], "prerequisites": ["v4.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
+    {"lesson_id": "v6.0", "title": "TLS", "status": "planned", "objective": "Understand encryption over TCP.", "concepts": [], "prerequisites": ["v4.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
+    {"lesson_id": "v7.0", "title": "HTTP", "status": "planned", "objective": "Understand application-layer communication.", "concepts": [], "prerequisites": ["v6.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
+    {"lesson_id": "v8.0", "title": "Linux routing", "status": "planned", "objective": "Understand how Linux routes packets.", "concepts": [], "prerequisites": ["v3.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
+    {"lesson_id": "v9.0", "title": "Docker networking", "status": "planned", "objective": "Understand container networking.", "concepts": [], "prerequisites": ["v8.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
+    {"lesson_id": "v10.0", "title": "Network namespaces", "status": "planned", "objective": "Understand kernel network isolation.", "concepts": [], "prerequisites": ["v8.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
+    {"lesson_id": "v11.0", "title": "VPN (Tailscale)", "status": "planned", "objective": "Understand overlay networking.", "concepts": [], "prerequisites": ["v8.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
+    {"lesson_id": "v12.0", "title": "Interactive terminal explorer", "status": "planned", "objective": "Consolidate the program into an interactive explorer.", "concepts": [], "prerequisites": ["v7.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []}
+  ]
+}
