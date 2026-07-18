@@ -189,6 +189,40 @@ class EndToEndClose(unittest.TestCase):
             self.assertEqual(json.loads(proc.stdout)["learner"], "u2")
 
 
+class CloseProtocolConsistency(unittest.TestCase):
+    """Natural-language close must find the same one-command protocol."""
+
+    def test_end_lesson_skill_exists_and_matches_cli(self):
+        skill = (REPO / ".claude" / "skills" / "end-lesson"
+                 / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("./packet-lab.sh lesson end", skill)
+        self.assertIn("I have to go", skill)
+        # The learner is released before any documentation or git work.
+        self.assertLess(skill.index("Release the learner"),
+                        skill.index("follow the printed policy"))
+
+    def test_shell_alias_forwards_to_lesson_end(self):
+        script = (REPO / "packet-lab.sh").read_text(encoding="utf-8")
+        self.assertIn("close|end)", script)
+        self.assertIn("lesson end", script)
+
+    def test_close_alias_works_end_to_end(self):
+        with tempfile.TemporaryDirectory() as d:
+            state = Path(d)
+            env = dict(os.environ, PACKETLAB_STATE=str(state))
+            subprocess.run([str(REPO / "packet-lab.sh"), "resume"],
+                           capture_output=True, cwd=REPO, env=env, timeout=30)
+            subprocess.run(["python3", "-m", "packetlab.lab", "learner",
+                            "create", "u1"], capture_output=True, cwd=REPO,
+                           env=env, timeout=30)
+            proc = subprocess.run(
+                [str(REPO / "packet-lab.sh"), "close", "--reason", "gtg"],
+                capture_output=True, text=True, cwd=REPO, env=env, timeout=30)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertEqual(json.loads(proc.stdout)["session"]["class"],
+                             "no_op")
+
+
 class MeaningfulProgressPreserved(unittest.TestCase):
     def test_evidence_session_keeps_evidence_in_canonical_state(self):
         # A full predict->observe->explain cycle lands in the learner model

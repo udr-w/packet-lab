@@ -29,6 +29,10 @@ case "${1:-help}" in
   test)
     exec python3 -m unittest discover -s tests "${@:2}"
     ;;
+  close|end)
+    # Forgiving aliases for the proportional session close.
+    exec python3 -m packetlab.lab lesson end "${@:2}"
+    ;;
   viewer)
     shift
     exec python3 scripts/packetlab.py "$@"
@@ -43,7 +47,9 @@ Common commands:
   ./packet-lab.sh eval                run control-plane conformance evals
   ./packet-lab.sh demo [--failure]    scripted end-to-end run (real execution)
   ./packet-lab.sh viewer [mode] [if]  the live tcpdump-backed packet viewer
+  ./packet-lab.sh resume              fast read-only resume snapshot
   ./packet-lab.sh lesson start v3.0   begin a lesson session
+  ./packet-lab.sh close --reason "…"  proportional session close (lesson end)
   ./packet-lab.sh inspect <run-id>    inspect a run trace (--verify, --timeline)
 
 Everything else is forwarded to `python3 -m packetlab.lab`. Run it with
