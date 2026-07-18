@@ -174,8 +174,22 @@ def _target_preflight_plan(inp: dict) -> dict:
             "output": output}
 
 
+def _target_closeout(inp: dict) -> dict:
+    """Classify a session from trace events and return the persistence policy
+    plus the learner farewell — the judgment layer for proportional close."""
+    from packetlab.lab import closeout
+    classification = closeout.classify(inp.get("events", []),
+                                       tuple(inp.get("changed_files", [])))
+    policy = closeout.persistence_policy(classification)
+    return {"status": classification["class"],
+            "output": json.dumps(
+                {"classification": classification, "policy": policy,
+                 "farewell": closeout.learner_farewell(classification)})}
+
+
 TARGETS = {
     "resume.render": _target_resume_render,
+    "closeout.policy": _target_closeout,
     "preflight.plan": _target_preflight_plan,
     "policy.check_command": _target_policy_check_command,
     "governor.evaluate": _target_governor_evaluate,

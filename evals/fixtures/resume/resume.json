@@ -15,7 +15,23 @@
         "stop_reasons": [{"ts": "2026-07-18T13:27:28+00:00", "reason": "Student had to leave for an urgent task before the first activity; no evidence recorded. Resume v3.0 at step 1."}]
       }
     },
-    "expect": {"status": "resume", "output_contains": ["Welcome back", "v3.0", "Next:"]}
+    "expect": {"status": "resume", "output_contains": ["Welcome back", "v3.0", "whom to ask", "You paused"], "not_contains": ["Student"]}
+  },
+  {
+    "eval_id": "resume-second-person-natural-wording",
+    "category": "resume",
+    "description": "The learner is addressed as 'you'; operator third-person phrasing and validation talk never appear.",
+    "target": "resume.render",
+    "input": {
+      "learner": "udara",
+      "lesson_state": {
+        "lesson_id": "v3.0",
+        "closed": true,
+        "concept_phase": {"dns.resolution-chain": "theory"},
+        "stop_reasons": [{"ts": "2026-07-18T13:27:28+00:00", "reason": "Student had to leave for an urgent task"}]
+      }
+    },
+    "expect": {"output_contains": ["You"], "not_contains": ["Student", "the learner", "preflight passed", "tools available", "capability", "state loaded"]}
   },
   {
     "eval_id": "resume-no-operational-dump",
@@ -55,7 +71,7 @@
       "lesson_state": {"lesson_id": "v3.0", "closed": true, "concept_phase": {"dns.resolution-chain": "predicted"}},
       "learner_model": {"version": 1, "concepts": {"dns.resolution-chain": {"state": "in_progress", "updated_at": "2026-07-04T20:00:00+00:00", "evidence": [{"ts": "2026-07-04T20:00:00+00:00", "kind": "prediction", "summary": "the second lookup is answered from cache", "lesson_id": "v3.0", "run_id": "run-x"}]}}}
     },
-    "expect": {"output_contains": ["the second lookup is answered from cache", "observe"]}
+    "expect": {"output_contains": ["the second lookup is answered from cache", "the experiment is next"]}
   },
   {
     "eval_id": "resume-does-not-reveal-preflight-or-expected-answer",
@@ -74,7 +90,7 @@
     "description": "A brand-new learner gets a clear first-lesson message, not an invented history.",
     "target": "resume.render",
     "input": {"learner": "newbie"},
-    "expect": {"status": "fresh", "output_contains": ["first lesson"]}
+    "expect": {"status": "fresh", "output_contains": ["You're starting", "Nothing to catch up on"]}
   },
   {
     "eval_id": "resume-no-active-learner-clear",

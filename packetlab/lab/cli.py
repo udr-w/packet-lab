@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -37,7 +38,11 @@ from packetlab.lab.statefile import load_json
 from packetlab.lab.trace import (Trace, list_runs, new_run_id, read_trace,
                                  repo_root, runs_dir, verify_chain)
 
-STATE_DIR = repo_root() / "state"
+# PACKETLAB_STATE overrides the state root for isolated tests/benchmarks;
+# normal use is always <repo>/state (which is gitignored — learner state is
+# private, per-machine runtime data and never belongs in Git).
+STATE_DIR = Path(os.environ["PACKETLAB_STATE"]) \
+    if os.environ.get("PACKETLAB_STATE") else repo_root() / "state"
 
 
 class NoActiveLearner(RuntimeError):
@@ -184,7 +189,62 @@ def cmd_lesson(args) -> int:
         gov.abort_lesson(args.reason or "unspecified")
         _out({"learner": learner_id, "aborted": True})
         return 0
+    if args.action == "end":
+        return _lesson_end(args, learner_id)
     return 1
+
+
+def _lesson_end(args, learner_id: str) -> int:
+    """Close a session proportionally: state first, learner released fast.
+
+    Aborts any open run (the interruption reason lands in lesson.json — the
+    canonical resume point), classifies the session from its trace, and
+    prints the persistence policy the assistant must follow. A no-op session
+    ends here: no doc edits, no commit, no push, no recap.
+    """
+    from packetlab.lab import closeout
+    from packetlab.lab.trace import read_trace, runs_dir
+
+    state = load_json(_lesson_state_path(learner_id), default={})
+    run_id = state.get("run_id")
+    open_run = bool(state.get("lesson_id")) and not state.get("closed")
+
+    events: list[dict] = []
+    if run_id:
+        trace_path = runs_dir(_learner_dir(learner_id)) / run_id / "trace.jsonl"
+        if trace_path.exists():
+            events = read_trace(trace_path)
+
+    if open_run:
+        gov = _governor(learner_id, trace=_active_trace(learner_id))
+        gov.abort_lesson(args.reason or "learner ended the session")
+
+    changed = _uncommitted_repo_files()
+    classification = closeout.classify(events if open_run else [],
+                                       tuple(changed))
+    _out({"learner": learner_id,
+          "closed_run": run_id if open_run else None,
+          "note": None if open_run else "no open lesson run; nothing to close",
+          "session": classification,
+          "persistence": closeout.persistence_policy(classification),
+          "learner_message": closeout.learner_farewell(classification),
+          "next_resume": "will return to the same question via "
+                         "`packet-lab.sh resume` — no documentation needed"})
+    return 0
+
+
+def _uncommitted_repo_files() -> list[str]:
+    """Paths with uncommitted changes (best-effort; empty if git unavailable)."""
+    import subprocess
+    try:
+        proc = subprocess.run(["git", "status", "--porcelain"],
+                              capture_output=True, text=True, timeout=10,
+                              cwd=repo_root())
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    if proc.returncode != 0:
+        return []
+    return [line[3:].strip() for line in proc.stdout.splitlines() if line]
 
 
 def cmd_record(args) -> int:
@@ -523,6 +583,11 @@ def build_parser() -> argparse.ArgumentParser:
     close.add_argument("--confirm", action="append", help="a met completion criterion")
     abort = lesson_sub.add_parser("abort")
     abort.add_argument("--reason", required=True)
+    end = lesson_sub.add_parser(
+        "end", help="proportional session close: aborts any open run, "
+        "classifies the session, prints what may be persisted")
+    end.add_argument("--reason", help="one-line interruption reason "
+                     "(stored in learner state, not documentation)")
 
     record = sub.add_parser("record", help="record learner evidence")
     record.add_argument("kind", choices=["prediction", "observation",

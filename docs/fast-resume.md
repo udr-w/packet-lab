@@ -1,7 +1,7 @@
-# Fast Resume
+# Fast Resume and Proportional Close
 
-Why "resume lesson" answers in seconds, and what is (deliberately) not done
-at resume time.
+Why "resume lesson" answers in seconds, why "end lesson" is one command and
+a goodbye, and what is (deliberately) not done at either moment.
 
 ## The problem this solves
 
@@ -112,6 +112,45 @@ phases, preflight plan) under an explicit "not for the learner" banner.
   lesson-specific checks.
 - **After repository changes**: doctor, tests, evals, demo — engineering
   work, never lesson-resume work.
+
+## Self-sufficient snapshot: one repository call
+
+The snapshot carries `next.prompt` — the complete next learner question,
+authored per concept in `curriculum.json` (`lessons[].prompts`, with
+deterministic fallbacks). Resuming therefore needs exactly one repository
+call and zero documentation reads. `preflight.timing` separates WHEN from
+WHAT: `not_needed`, `needed_before_experiment` (next action is conceptual —
+ask immediately, validate later), `needed_now` (next action is the
+experiment). Capability checks never run merely because a lesson eventually
+captures packets.
+
+## Proportional session close
+
+The counterpart failure to slow resume was write amplification at close: a
+session with zero learner evidence once produced 40 lines across the lesson
+narrative, TASK.md and handover ("nothing happened tonight"), a commit, a
+rebase, and a push — while the canonical resume point already lived in
+lesson.json. The rule now: **one authoritative home per fact**, and
+repository mutation proportional to durable value (see the persistence
+table in `packetlab/lab/closeout.py` and AGENTS.md "end lesson for today").
+
+`./packet-lab.sh lesson end --reason "..."` aborts any open run (the reason
+lands in learner state — private, gitignored, machine-local), classifies
+the session from its trace, and prints what the session earned the right
+to write:
+
+| Session class | narrative | TASK.md | handover | commit | push |
+|---|---|---|---|---|---|
+| no_op (no evidence; incl. talk-only, "I have to go") | — | — | — | — | — |
+| evidence (prediction/observation/explanation recorded) | learning content | only if the plan changed | — | local | — |
+| milestone (closed via completion criteria) | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+Engineering changes detected alongside a lesson are delivered under
+repository-owner mode after the learner is released. The minimum durable
+record of "the learner had to leave" is the aborted run in learner state —
+no repository change at all; the next resume derives the exact question
+from canonical state. Skip-waiver-only sessions ("go ahead") also close as
+no_op: waivers gate phases but are not learning evidence.
 
 ## Performance targets
 

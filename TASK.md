@@ -10,24 +10,21 @@ Done so far (session 1, 2026-07-04): theory (chain, UDP 53, A/PTR, query
 IDs, configuration-vs-cache distinction) and resolver config observed
 (`127.0.0.53` stub → per-link `192.168.8.1`). Correct student predictions
 banked: ARP → DNS → ICMP ordering; first-dig-on-radio / second-dig-silent.
-Session 2 (2026-07-18) opened via the control plane, verified the capture
-path, then ended early (student urgent task) — no new evidence recorded.
 Narrative: `docs/lessons/v3.0-dns.md`. Durable notes so far:
-`docs/knowledge/dns.md`.
+`docs/knowledge/dns.md`. (Session position and interruptions live in
+learner state — `./packet-lab.sh resume` — not here.)
 
 ---
 
 ## Immediate next steps
 
-1. **Re-ask the warm-up** (posed 2026-07-18, unanswered): fresh network,
-   DHCP done, nothing looked up yet — does the machine know any *answers*,
-   and does it know *who to ask*? (configuration vs cache).
+1. **Warm-up** (unanswered): fresh network, DHCP done, nothing looked up
+   yet — does the machine know any *answers*, and does it know *who to
+   ask*? (configuration vs cache).
 2. **Live capture:** student runs `dig` twice for a fresh name while
    capturing UDP port 53 on `wlp0s20f3` — confirm the banked prediction:
    query+response on the radio for dig #1 (stub cache miss, forwarded to
    `192.168.8.1`), radio silence for dig #2 (stub cache hit via `lo`).
-   Capture path already verified 2026-07-18 (`getcap` intact; live query/
-   response captured) — re-verify quickly at session start.
 3. **Reverse lookup:** `dig -x` a LAN IP (PTR) — see the viewer's
    device-name mechanism as raw packets.
 4. **Read the wire shape:** query ID matching, question/answer sections,
@@ -44,8 +41,8 @@ Narrative: `docs/lessons/v3.0-dns.md`. Durable notes so far:
 
 Start the session with `python3 -m packetlab.lab lesson start v3.0`
 (learner `udara`), record evidence via `lab record`, close with
-`lab lesson close --confirm "<criterion>"`. Session 2's run was aborted
-cleanly with a reason — no dangling state.
+`lab lesson close --confirm "<criterion>"`; interruptions end with
+`lab lesson end --reason "..."`.
 
 ---
 

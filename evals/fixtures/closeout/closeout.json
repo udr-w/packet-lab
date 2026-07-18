@@ -1,0 +1,90 @@
+[
+  {
+    "eval_id": "close-noop-no-docs-no-git",
+    "category": "closeout",
+    "description": "A session with no learner evidence closes with state only: no docs, no commit, no push, and a warm one-liner.",
+    "target": "closeout.policy",
+    "input": {"events": []},
+    "expect": {"status": "no_op", "output_contains": ["\"commit\": false", "\"push\": false", "\"lesson_narrative\": false", "nothing lost"]}
+  },
+  {
+    "eval_id": "close-unanswered-question-is-noop",
+    "category": "closeout",
+    "description": "Resumed, question posed, learner left without answering: still a no-op close.",
+    "target": "closeout.policy",
+    "input": {"events": [
+      {"component": "governor", "event": "lesson_started"},
+      {"component": "governor", "event": "policy_decision", "kind": "topic"}
+    ]},
+    "expect": {"status": "no_op", "output_contains": ["\"commit\": false"]}
+  },
+  {
+    "eval_id": "close-skip-waivers-are-not-evidence",
+    "category": "closeout",
+    "description": "A session of nothing but 'go ahead' skip waivers earned no persistence.",
+    "target": "closeout.policy",
+    "input": {"events": [
+      {"component": "governor", "event": "action_committed", "kind": "record", "phase": "skip"},
+      {"component": "governor", "event": "action_committed", "kind": "record", "phase": "skip"}
+    ]},
+    "expect": {"status": "no_op", "output_contains": ["\"skips\": 2", "\"commit\": false"]}
+  },
+  {
+    "eval_id": "close-after-prediction-commits-locally-no-push",
+    "category": "closeout",
+    "description": "Interrupted after a prediction: learning content may be persisted and committed locally, but a session end is never a push event.",
+    "target": "closeout.policy",
+    "input": {"events": [
+      {"component": "governor", "event": "action_committed", "kind": "record", "phase": "predicted"}
+    ]},
+    "expect": {"status": "evidence", "output_contains": ["\"commit\": true", "\"push\": false", "\"handover\": false"]}
+  },
+  {
+    "eval_id": "close-after-observation-same-policy",
+    "category": "closeout",
+    "description": "Interrupted after an observation: evidence-class persistence, still no push, no handover rewrite.",
+    "target": "closeout.policy",
+    "input": {"events": [
+      {"component": "governor", "event": "action_committed", "kind": "record", "phase": "predicted"},
+      {"component": "governor", "event": "action_committed", "kind": "record", "phase": "observed"}
+    ]},
+    "expect": {"status": "evidence", "output_contains": ["\"push\": false", "\"handover\": false"]}
+  },
+  {
+    "eval_id": "close-milestone-full-wrapup",
+    "category": "closeout",
+    "description": "A lesson closed via completion criteria is the release event: full documentation and push.",
+    "target": "closeout.policy",
+    "input": {"events": [
+      {"component": "governor", "event": "action_committed", "kind": "record", "phase": "explained"},
+      {"component": "governor", "event": "lesson_closed"}
+    ]},
+    "expect": {"status": "milestone", "output_contains": ["\"push\": true", "\"handover\": true", "\"roadmap\": true"]}
+  },
+  {
+    "eval_id": "close-engineering-delivered-separately",
+    "category": "closeout",
+    "description": "Code changes alongside a lesson are delivered under repository-owner mode after the learner is released; state/ changes are not engineering.",
+    "target": "closeout.policy",
+    "input": {"events": [], "changed_files": ["state/learners/u1/lesson.json", "packetlab/lab/resume.py"]},
+    "expect": {"status": "no_op", "output_contains": ["repository-owner mode", "packetlab/lab/resume.py"], "not_contains": ["\"state/learners"]}
+  },
+  {
+    "eval_id": "close-never-narrates-administration",
+    "category": "closeout",
+    "description": "Every persistence policy carries the no-admin-narration and learner-privacy constraints.",
+    "target": "closeout.policy",
+    "input": {"events": [
+      {"component": "governor", "event": "action_committed", "kind": "record", "phase": "predicted"}
+    ]},
+    "expect": {"output_contains": ["never write that a session opened", "learner-private", "one authoritative home"]}
+  },
+  {
+    "eval_id": "close-farewell-is-warm-not-operational",
+    "category": "closeout",
+    "description": "The farewell reads like closing a notebook, not a release ceremony.",
+    "target": "closeout.policy",
+    "input": {"events": []},
+    "expect": {"output_contains": ["pick up exactly where we stopped"], "not_contains": ["governor", "rebase", "release ceremony"]}
+  }
+]

@@ -12,7 +12,7 @@ must exist in the top-level `concepts` map — the loader rejects dangling refs.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from pathlib import Path
 
@@ -49,6 +49,11 @@ class Lesson:
     permitted_categories: tuple
     budgets: Budgets | None
     completion_criteria: tuple
+    # Authored learner-facing prompts, keyed concept_id -> {phase: text} with
+    # phase in predict|observe|explain. Canonical lesson metadata: the resume
+    # snapshot serves the next question from here, so resuming never needs a
+    # TASK.md or narrative read.
+    prompts: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -127,6 +132,18 @@ def load(path: Path | None = None) -> Curriculum:
         elif status != "planned":
             raise ValueError(f"{lesson_id}: non-planned lesson must declare budgets")
 
+        prompts = raw.get("prompts", {})
+        for concept_id, phases in prompts.items():
+            if concept_id not in raw.get("concepts", []):
+                raise ValueError(
+                    f"{lesson_id}: prompt for '{concept_id}' which is not a "
+                    "concept of this lesson")
+            for phase in phases:
+                if phase not in ("predict", "observe", "explain"):
+                    raise ValueError(
+                        f"{lesson_id}: unknown prompt phase '{phase}' for "
+                        f"'{concept_id}'")
+
         lessons[lesson_id] = Lesson(
             lesson_id=lesson_id, title=raw["title"], status=status,
             objective=raw["objective"], concepts=tuple(raw.get("concepts", [])),
@@ -136,6 +153,7 @@ def load(path: Path | None = None) -> Curriculum:
             permitted_categories=tuple(raw.get("permitted_categories", [])),
             budgets=budgets,
             completion_criteria=tuple(raw.get("completion_criteria", [])),
+            prompts=prompts,
         )
 
     for lesson in lessons.values():

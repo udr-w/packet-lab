@@ -21,12 +21,23 @@ e.g. a preflight DNS query still exercises the resolver path and populates a
 negative-cache entry for the disposable label; interface counters tick. What
 cannot be perfectly restored is documented, not hidden.
 
-Outcomes:
+Timing is the primary decision — validation is worthless if it delays a purely
+conceptual question:
 
-    none_needed        nothing about the next step depends on the environment
+    not_needed                 nothing in this lesson depends on the environment
+    needed_before_experiment   the lesson has practical steps coming, but the
+                               learner's NEXT action is conceptual (a prediction
+                               or an explanation) — ask it immediately, validate
+                               later, right before the experiment
+    needed_now                 the learner's next action IS the experiment —
+                               validate before handing it to them
+
+Outcomes describe WHAT runs when the timing arrives:
+
+    none_needed        nothing about this lesson depends on the environment
     capability_only    binary/capability presence checks, no packets, no state
     lightweight        capability checks + one disposable representative probe,
-                       deferred until after the learner's prediction is recorded
+                       run only after the learner's prediction is recorded
     unavailable        a required check already failed (set by run_checks)
 """
 
@@ -42,8 +53,14 @@ OUTCOME_CAPABILITY_ONLY = "capability_only"
 OUTCOME_LIGHTWEIGHT = "lightweight"
 OUTCOME_UNAVAILABLE = "unavailable"
 
-# Phases whose next step involves running something on the machine.
-_EXPERIMENT_PHASES = (None, "theory", "predicted")
+TIMING_NOT_NEEDED = "not_needed"
+TIMING_BEFORE_EXPERIMENT = "needed_before_experiment"
+TIMING_NOW = "needed_now"
+
+# Governor phases whose NEXT learner action is conceptual (theory -> predict,
+# observed -> explain) versus practical (predicted -> run the experiment).
+_CONCEPTUAL_PHASES = ("theory", "observed")
+_PRACTICAL_PHASES = ("predicted",)
 
 # Category -> the checks that make its experiments runnable.
 # kind "binary": presence via shutil.which (no subprocess, no packets).
@@ -90,28 +107,38 @@ def disposable_hostname(reserved: tuple[str, ...] = (),
 
 def plan(lesson: Lesson | None, next_phase: str | None = None,
          reserved_targets: tuple[str, ...] = ()) -> dict:
-    """Deterministic preflight decision for the lesson's next step."""
-    if lesson is None or next_phase not in _EXPERIMENT_PHASES:
-        return {"recommended": False, "outcome": OUTCOME_NONE,
-                "reason": "the next step is conversational; nothing to validate",
+    """Deterministic preflight decision for the lesson's next step.
+
+    `timing` is authoritative: run checks only when it is `needed_now`. A
+    conceptual prediction or explanation question must never wait for — or
+    trigger — environment validation just because the lesson eventually
+    captures packets.
+    """
+    checks = [] if lesson is None else \
+        [dict(check) for category in lesson.permitted_categories
+         for check in _CATEGORY_CHECKS.get(category, ())]
+
+    if not checks or next_phase not in (_CONCEPTUAL_PHASES + _PRACTICAL_PHASES):
+        return {"recommended": False, "timing": TIMING_NOT_NEEDED,
+                "outcome": OUTCOME_NONE,
+                "reason": ("nothing about the next step depends on the "
+                           "environment"),
                 "checks": [], "contamination_controls": [],
                 "residual_risks": []}
 
-    checks = [dict(check) for category in lesson.permitted_categories
-              for check in _CATEGORY_CHECKS.get(category, ())]
-    if not checks:
-        return {"recommended": False, "outcome": OUTCOME_NONE,
-                "reason": "no environment-dependent categories in this lesson",
-                "checks": [], "contamination_controls": [],
-                "residual_risks": []}
-
+    timing = TIMING_NOW if next_phase in _PRACTICAL_PHASES \
+        else TIMING_BEFORE_EXPERIMENT
     stateful = [c for c in lesson.permitted_categories
                 if c in _STATEFUL_CATEGORIES]
     result = {
-        "recommended": True,
+        "recommended": timing == TIMING_NOW,
+        "timing": timing,
         "outcome": OUTCOME_LIGHTWEIGHT if stateful else OUTCOME_CAPABILITY_ONLY,
-        "reason": ("the next step needs live capture/lookup tools; verify "
-                   "them privately before asking the learner to predict"),
+        "reason": ("the learner's next action is the experiment; verify the "
+                   "path privately before handing it over"
+                   if timing == TIMING_NOW else
+                   "the next action is conceptual; ask it immediately and "
+                   "validate later, right before the experiment"),
         "checks": checks,
         "contamination_controls": [
             "preflight output is private operator diagnostics, never shown "
