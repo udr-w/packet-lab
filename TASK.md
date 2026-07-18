@@ -10,6 +10,8 @@ Done so far (session 1, 2026-07-04): theory (chain, UDP 53, A/PTR, query
 IDs, configuration-vs-cache distinction) and resolver config observed
 (`127.0.0.53` stub → per-link `192.168.8.1`). Correct student predictions
 banked: ARP → DNS → ICMP ordering; first-dig-on-radio / second-dig-silent.
+Session 2 (2026-07-18) opened via the control plane, verified the capture
+path, then ended early (student urgent task) — no new evidence recorded.
 Narrative: `docs/lessons/v3.0-dns.md`. Durable notes so far:
 `docs/knowledge/dns.md`.
 
@@ -17,23 +19,33 @@ Narrative: `docs/lessons/v3.0-dns.md`. Durable notes so far:
 
 ## Immediate next steps
 
-1. **Live capture (opens next session):** student runs `dig` twice for a
-   fresh name while capturing UDP port 53 on `wlp0s20f3` — confirm the
-   banked prediction: query+response on the radio for dig #1 (stub cache
-   miss, forwarded to `192.168.8.1`), radio silence for dig #2 (stub cache
-   hit via `lo`). Assistant verifies the capture path first and quotes the
-   exact command + raw output in-message.
-2. **Reverse lookup:** `dig -x` a LAN IP (PTR) — see the viewer's
+1. **Re-ask the warm-up** (posed 2026-07-18, unanswered): fresh network,
+   DHCP done, nothing looked up yet — does the machine know any *answers*,
+   and does it know *who to ask*? (configuration vs cache).
+2. **Live capture:** student runs `dig` twice for a fresh name while
+   capturing UDP port 53 on `wlp0s20f3` — confirm the banked prediction:
+   query+response on the radio for dig #1 (stub cache miss, forwarded to
+   `192.168.8.1`), radio silence for dig #2 (stub cache hit via `lo`).
+   Capture path already verified 2026-07-18 (`getcap` intact; live query/
+   response captured) — re-verify quickly at session start.
+3. **Reverse lookup:** `dig -x` a LAN IP (PTR) — see the viewer's
    device-name mechanism as raw packets.
-3. **Read the wire shape:** query ID matching, question/answer sections,
+4. **Read the wire shape:** query ID matching, question/answer sections,
    the answer's TTL (= how long the caches may keep it).
-4. **Extend the viewer** with a minimal `dns` mode (UDP 53 filter + parser
+5. **Extend the viewer** with a minimal `dns` mode (UDP 53 filter + parser
    showing name, record type, answer), following the established mode
    pattern, Evidence Visibility, and Human-readable output rules.
 
 ## Tooling debt
 
-- Viewer has `icmp` and `arp` modes only; `dns` mode needed for step 4.
+- Viewer has `icmp` and `arp` modes only; `dns` mode needed for step 5.
+
+## Control plane
+
+Start the session with `python3 -m packetlab.lab lesson start v3.0`
+(learner `udara`), record evidence via `lab record`, close with
+`lab lesson close --confirm "<criterion>"`. Session 2's run was aborted
+cleanly with a reason — no dangling state.
 
 ---
 

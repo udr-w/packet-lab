@@ -45,9 +45,12 @@ ourselves — one protocol at a time, fully, before moving on.
 
 - **Version 3.0 (DNS) is IN PROGRESS** — session 1 done 2026-07-04: theory
   (chain, UDP 53, A/PTR, configuration-vs-cache) and resolver config
-  observed (127.0.0.53 stub → per-link 192.168.8.1). Next session OPENS with
-  the live dig×2 capture proving the banked cache prediction, then a PTR
-  lookup and the `dns` viewer mode. Full plan in `TASK.md`; narrative in
+  observed (127.0.0.53 stub → per-link 192.168.8.1). Session 2 (2026-07-18)
+  was the first run through the control plane but ended early (student
+  urgent task) with no evidence recorded; capture path was verified intact.
+  Next session RE-OPENS with the unanswered configuration-vs-cache warm-up,
+  then the live dig×2 capture proving the banked cache prediction, a PTR
+  lookup, and the `dns` viewer mode. Full plan in `TASK.md`; narrative in
   `docs/lessons/v3.0-dns.md`.
 - **Versions 1 (ICMP) and 2 (ARP) are COMPLETE** (both closed 2026-07-04).
   Durable concepts: `docs/knowledge/icmp.md`, `arp.md`, `dns.md` (growing).
