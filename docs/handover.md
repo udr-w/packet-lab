@@ -45,13 +45,11 @@ ourselves — one protocol at a time, fully, before moving on.
 
 - **Version 3.0 (DNS) is IN PROGRESS** — session 1 done 2026-07-04: theory
   (chain, UDP 53, A/PTR, configuration-vs-cache) and resolver config
-  observed (127.0.0.53 stub → per-link 192.168.8.1). Session 2 (2026-07-18)
-  was the first run through the control plane but ended early (student
-  urgent task) with no evidence recorded; capture path was verified intact.
-  Next session RE-OPENS with the unanswered configuration-vs-cache warm-up,
-  then the live dig×2 capture proving the banked cache prediction, a PTR
-  lookup, and the `dns` viewer mode. Full plan in `TASK.md`; narrative in
-  `docs/lessons/v3.0-dns.md`.
+  observed (127.0.0.53 stub → per-link 192.168.8.1). Remaining: the
+  unanswered configuration-vs-cache warm-up, the live dig×2 capture proving
+  the banked cache prediction, a PTR lookup, and the `dns` viewer mode.
+  Plan in `TASK.md`; narrative in `docs/lessons/v3.0-dns.md`. Exact session
+  position comes from `./packet-lab.sh resume`, never from this file.
 - **Versions 1 (ICMP) and 2 (ARP) are COMPLETE** (both closed 2026-07-04).
   Durable concepts: `docs/knowledge/icmp.md`, `arp.md`, `dns.md` (growing).
 - **Tooling status:** viewer healthy with `icmp` and `arp` modes
@@ -73,7 +71,7 @@ ourselves — one protocol at a time, fully, before moving on.
   traces, and **per-learner isolation** (each engineer has an isolated profile
   under `state/learners/<id>/`; the active learner shows in every command and
   trace). Health: `python3 -m packetlab.lab doctor`; tests
-  (`./packet-lab.sh test`, 133) and evals (`./packet-lab.sh eval`, 44) pass. See
+  (`./packet-lab.sh test`, 161) and evals (`./packet-lab.sh eval`, 54) pass. See
   AGENTS.md ("Curriculum Governor" + "Multi-learner context isolation") and
   `docs/architecture.md`. This did NOT change lesson progress — DNS (v3.0) is
   still where it was.
@@ -113,7 +111,8 @@ ourselves — one protocol at a time, fully, before moving on.
   caps and flags anti-patterns. Run `python3 scripts/lab-doctor.py` before each
   lesson.
 - **Version control:** the lab is its own git repo (branch `main`), pushed to the
-  private GitHub repo `github.com/udr-w/packet-lab`. `end lesson for today`
-  auto-commits and pushes after lab-doctor passes. Packet captures are gitignored
-  (`capture/`, `*.pcap`/`*.pcapng`/`*.cap`) — they may contain sensitive traffic
-  and must never be committed.
+  private GitHub repo `github.com/udr-w/packet-lab`. Commits and pushes are
+  proportional to durable value (`lesson end` prints the policy): a no-op
+  session touches nothing, evidence commits locally, only milestones and
+  engineering work push. Packet captures and `state/` (learner-private) are
+  gitignored and must never be committed.

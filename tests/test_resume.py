@@ -38,7 +38,12 @@ def make_curriculum() -> Curriculum:
         prerequisites=(), in_scope=(), out_of_scope=(),
         permitted_categories=("observe_network", "dns_query", "capture"),
         budgets=Budgets(30, 3, 2, 300),
-        completion_criteria=("Student explains the chain",))
+        completion_criteria=("Student explains the chain",),
+        prompts={"dns.resolution-chain": {
+            "predict": "Does a fresh machine know any DNS answers, and whom "
+                       "to ask? Where would each come from?",
+            "observe": "Run dig twice while capturing UDP 53 and describe "
+                       "what the radio carries each time."}})
     return Curriculum(
         concepts={"dns.resolution-chain": "Who asks whom and why",
                   "dns.caching-ttl": "Caching and TTLs"},
@@ -252,6 +257,43 @@ class SnapshotCorrectness(unittest.TestCase):
                                                  curriculum=make_curriculum())
             self.assertEqual([], resume_mod.validate_snapshot(snapshot))
 
+    def test_snapshot_is_self_sufficient_no_doc_read_needed(self):
+        # The complete next learner question comes from curriculum metadata
+        # (or a deterministic fallback) — never from TASK.md or a narrative.
+        with tempfile.TemporaryDirectory() as d:
+            tmp = make_state(Path(d), lesson_state=UNFINISHED_LESSON)
+            snapshot = resume_mod.build_snapshot(state_dir=tmp,
+                                                 curriculum=make_curriculum())
+            # phase 'predicted' -> the authored observe prompt
+            self.assertEqual(snapshot["next"]["action_type"], "observe")
+            self.assertIn("dig twice", snapshot["next"]["prompt"])
+            self.assertEqual(snapshot["preflight"]["timing"], "needed_now")
+
+    def test_conceptual_next_step_defers_preflight(self):
+        state = dict(UNFINISHED_LESSON,
+                     concept_phase={"dns.resolution-chain": "theory",
+                                    "dns.caching-ttl": "theory"})
+        with tempfile.TemporaryDirectory() as d:
+            tmp = make_state(Path(d), lesson_state=state)
+            snapshot = resume_mod.build_snapshot(state_dir=tmp,
+                                                 curriculum=make_curriculum())
+            self.assertEqual(snapshot["next"]["action_type"], "predict")
+            self.assertEqual(snapshot["preflight"]["timing"],
+                             "needed_before_experiment")
+            self.assertFalse(snapshot["preflight"]["recommended"])
+
+    def test_fallback_prompt_when_lesson_has_none_authored(self):
+        state = dict(UNFINISHED_LESSON,
+                     concept_phase={"dns.resolution-chain": "explained",
+                                    "dns.caching-ttl": "theory"})
+        with tempfile.TemporaryDirectory() as d:
+            tmp = make_state(Path(d), lesson_state=state)
+            snapshot = resume_mod.build_snapshot(state_dir=tmp,
+                                                 curriculum=make_curriculum())
+            self.assertEqual(snapshot["next"]["concept"], "dns.caching-ttl")
+            self.assertTrue(snapshot["next"]["prompt"])
+            self.assertIn("Caching and TTLs", snapshot["next"]["prompt"])
+
 
 class OutputSeparation(unittest.TestCase):
     def snapshot(self, tmp: Path) -> dict:
@@ -269,11 +311,30 @@ class OutputSeparation(unittest.TestCase):
                 self.assertNotIn(term, text,
                                  f"learner output leaked operational term {term!r}")
 
-    def test_learner_output_has_exactly_one_next_step(self):
+    def test_learner_output_has_exactly_one_question(self):
+        with tempfile.TemporaryDirectory() as d:
+            tmp = make_state(Path(d), lesson_state=UNFINISHED_LESSON)
+            snapshot = self.snapshot(tmp)
+            text = resume_mod.render_learner(snapshot)
+            # The prompt is the question, appears once, and closes the message.
+            self.assertEqual(text.count(snapshot["next"]["prompt"]), 1)
+            self.assertTrue(text.endswith(snapshot["next"]["prompt"]))
+
+    def test_learner_output_is_second_person(self):
         with tempfile.TemporaryDirectory() as d:
             tmp = make_state(Path(d), lesson_state=UNFINISHED_LESSON)
             text = resume_mod.render_learner(self.snapshot(tmp))
-            self.assertEqual(text.count("Next:"), 1)
+            self.assertIn("You", text)
+            self.assertNotIn("Student", text)
+            self.assertNotIn("the learner", text)
+
+    def test_learner_output_never_mentions_validation(self):
+        with tempfile.TemporaryDirectory() as d:
+            tmp = make_state(Path(d), lesson_state=UNFINISHED_LESSON)
+            text = resume_mod.render_learner(self.snapshot(tmp)).lower()
+            for phrase in ("preflight", "capability", "tools available",
+                           "state loaded", "run opened", "check passed"):
+                self.assertNotIn(phrase, text)
 
     def test_learner_output_does_not_dump_roadmap(self):
         with tempfile.TemporaryDirectory() as d:
@@ -327,7 +388,9 @@ class ProtocolConsistency(unittest.TestCase):
                         skill.index("resume --json"),
                         "acknowledgement must precede the snapshot call, so "
                         "a slow preflight can never delay it")
-        self.assertIn("never invent expected results", skill.lower())
+        normalized = " ".join(skill.lower().split())
+        self.assertIn("never invent expected results", normalized)
+        self.assertIn("needed_before_experiment", skill)
 
 
 if __name__ == "__main__":

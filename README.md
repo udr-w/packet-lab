@@ -28,8 +28,8 @@ Reproducible today:
 
 | Metric | Value | Reproduce |
 |---|---|---|
-| Unit tests (safety mechanisms) | **133 passing** | `./packet-lab.sh test` |
-| Control-plane conformance evals | **44 passing** | `./packet-lab.sh eval` |
+| Unit tests (safety mechanisms) | **161 passing** | `./packet-lab.sh test` |
+| Control-plane conformance evals | **54 passing** | `./packet-lab.sh eval` |
 | End-to-end demo (real execution) | success + failure paths | `./packet-lab.sh demo` / `--failure` |
 | Example run trace (hash-chain verified) | committed | `python3 -m packetlab.lab inspect --file docs/examples/trace-icmp-v1.1.jsonl --verify` |
 | Resume snapshot latency (measured, no LLM) | warm ~1 ms / cold process ~45 ms | `python3 scripts/bench-resume.py` |
@@ -334,8 +334,8 @@ git clone https://github.com/udr-w/packet-lab.git
 cd packet-lab
 
 ./packet-lab.sh doctor      # health: doc caps + curriculum/roadmap consistency
-./packet-lab.sh test        # 133 unit tests
-./packet-lab.sh eval        # 44 conformance evals
+./packet-lab.sh test        # 161 unit tests
+./packet-lab.sh eval        # 54 conformance evals
 ./packet-lab.sh demo        # scripted end-to-end run (real execution)
 ```
 

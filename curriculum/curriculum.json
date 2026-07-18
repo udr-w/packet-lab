@@ -87,7 +87,33 @@
         "Student explains query/response shape on the wire: UDP 53, id matching, question/answer sections",
         "Student explains A vs PTR lookups",
         "Student explains where caching happens, with the dig-twice capture as evidence"
-      ]
+      ],
+      "prompts": {
+        "dns.resolution-chain": {
+          "predict": "Your laptop has just joined a brand-new Wi-Fi network. DHCP has finished; nothing has been looked up yet. Does the machine already know any DNS *answers*? Does it know *whom to ask*? Explain where each piece of knowledge would come from.",
+          "observe": "Run `dig` twice for the same never-before-seen name while capturing UDP port 53 on your Wi-Fi interface, and describe what appears on the radio for each dig."
+        },
+        "dns.configuration-vs-cache": {
+          "predict": "One of these was handed to your laptop by DHCP and one is earned lookup-by-lookup: the DNS server's address, and the answers themselves. Which is which — and which of the two can expire?"
+        },
+        "dns.stub-resolver": {
+          "predict": "Your resolv.conf points at 127.0.0.53 — an address on your own machine. When you look up a name, what do you expect to happen on the Wi-Fi interface if that local resolver already knows the answer, and if it doesn't?"
+        },
+        "dns.udp-53": {
+          "predict": "A DNS lookup is one small question and one small answer. Do you expect it to set up a connection first, like a phone call, or just send a single packet, like a text message — and why would the designers choose that?"
+        },
+        "dns.record-types": {
+          "predict": "You can ask DNS for the address behind a name (A) — and also for the name behind an address (PTR). When you `dig -x` your router's LAN IP, what do you expect back, and who on your network would even know that?",
+          "observe": "Run `dig -x` against a LAN IP (your router or phone) and tell me exactly what comes back."
+        },
+        "dns.query-id-matching": {
+          "predict": "DNS answers arrive as loose UDP packets — no connection to tie a reply to its question. If two lookups are in flight at once, how do you expect the resolver tells the answers apart?"
+        },
+        "dns.caching-ttl": {
+          "predict": "You look the same name up twice, seconds apart. What do you expect to see on the Wi-Fi interface for the first lookup, and for the second — and what decides how long that difference lasts?",
+          "observe": "Capture UDP 53 on the Wi-Fi interface while running the same `dig` twice and report what the radio carried each time."
+        }
+      }
     },
     {"lesson_id": "v4.0", "title": "TCP", "status": "planned", "objective": "Understand reliable communication.", "concepts": [], "prerequisites": ["v3.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},
     {"lesson_id": "v5.0", "title": "UDP", "status": "planned", "objective": "Understand connectionless communication.", "concepts": [], "prerequisites": ["v4.0"], "in_scope": [], "out_of_scope": [], "permitted_categories": [], "budgets": null, "completion_criteria": []},

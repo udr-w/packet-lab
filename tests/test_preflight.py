@@ -28,20 +28,36 @@ def lesson(categories: tuple, status: str = "in_progress") -> Lesson:
 
 
 class PlanDecision(unittest.TestCase):
-    def test_conversational_step_needs_no_validation(self):
+    def test_conceptual_next_step_defers_validation(self):
+        # A prediction (theory) or explanation (observed) question is asked
+        # immediately; validation waits until just before the experiment —
+        # even though this lesson will capture packets eventually.
+        for phase in ("theory", "observed"):
+            plan = preflight.plan(lesson(("dns_query", "capture")),
+                                  next_phase=phase)
+            self.assertEqual(plan["timing"], "needed_before_experiment", phase)
+            self.assertFalse(plan["recommended"], phase)
+
+    def test_practical_next_step_validates_now(self):
+        plan = preflight.plan(lesson(("capture",)), next_phase="predicted")
+        self.assertEqual(plan["timing"], "needed_now")
+        self.assertTrue(plan["recommended"])
+
+    def test_finished_lesson_needs_nothing(self):
         plan = preflight.plan(lesson(("dns_query", "capture")),
-                              next_phase="observed")
-        self.assertFalse(plan["recommended"])
+                              next_phase=None)
+        self.assertEqual(plan["timing"], "not_needed")
         self.assertEqual(plan["outcome"], "none_needed")
 
     def test_no_environment_categories_needs_no_validation(self):
         plan = preflight.plan(lesson(("observe_network", "read_system_file")),
                               next_phase="theory")
         self.assertFalse(plan["recommended"])
+        self.assertEqual(plan["timing"], "not_needed")
         self.assertEqual(plan["checks"], [])
 
     def test_capture_lesson_gets_capability_checks(self):
-        plan = preflight.plan(lesson(("capture",)), next_phase="theory")
+        plan = preflight.plan(lesson(("capture",)), next_phase="predicted")
         self.assertTrue(plan["recommended"])
         self.assertEqual(plan["outcome"], "capability_only")
         ids = [c["id"] for c in plan["checks"]]
@@ -52,6 +68,7 @@ class PlanDecision(unittest.TestCase):
         plan = preflight.plan(lesson(("dns_query", "capture")),
                               next_phase="predicted")
         self.assertEqual(plan["outcome"], "lightweight")
+        self.assertEqual(plan["timing"], "needed_now")
         self.assertTrue(plan["disposable_hostname"])
         controls = " ".join(plan["contamination_controls"])
         self.assertIn("disposable hostname", controls)
