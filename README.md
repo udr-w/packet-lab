@@ -28,10 +28,11 @@ Reproducible today:
 
 | Metric | Value | Reproduce |
 |---|---|---|
-| Unit tests (safety mechanisms) | **96 passing** | `./packet-lab.sh test` |
-| Control-plane conformance evals | **32 passing** | `./packet-lab.sh eval` |
+| Unit tests (safety mechanisms) | **133 passing** | `./packet-lab.sh test` |
+| Control-plane conformance evals | **44 passing** | `./packet-lab.sh eval` |
 | End-to-end demo (real execution) | success + failure paths | `./packet-lab.sh demo` / `--failure` |
 | Example run trace (hash-chain verified) | committed | `python3 -m packetlab.lab inspect --file docs/examples/trace-icmp-v1.1.jsonl --verify` |
+| Resume snapshot latency (measured, no LLM) | warm ~1 ms / cold process ~45 ms | `python3 scripts/bench-resume.py` |
 
 No benchmarks, accuracy percentages, or security guarantees are claimed — none
 would be reproducible, so none appear.
@@ -312,6 +313,14 @@ is wrapped as untrusted data (`untrusted.render`) and never silently becomes
 agent instructions. Detail:
 [`docs/context-and-memory.md`](docs/context-and-memory.md).
 
+**Fast resume:** `./packet-lab.sh resume` returns a read-only snapshot of the
+active learner's position (lesson, where they stopped, the one next action,
+whether private preflight is worth doing) in a single call — no doctor run, no
+document sweep, no network. Learner state in `state/learners/<id>/` is
+canonical; assistant chat memory never is. Measured and CI-benchmarked
+(`scripts/bench-resume.py`). Detail:
+[`docs/fast-resume.md`](docs/fast-resume.md).
+
 ---
 
 ## Quick start
@@ -325,8 +334,8 @@ git clone https://github.com/udr-w/packet-lab.git
 cd packet-lab
 
 ./packet-lab.sh doctor      # health: doc caps + curriculum/roadmap consistency
-./packet-lab.sh test        # 96 unit tests
-./packet-lab.sh eval        # 32 conformance evals
+./packet-lab.sh test        # 133 unit tests
+./packet-lab.sh eval        # 44 conformance evals
 ./packet-lab.sh demo        # scripted end-to-end run (real execution)
 ```
 
@@ -338,6 +347,8 @@ Full setup: [`docs/SETUP.md`](docs/SETUP.md). Operations:
 ## Commands
 
 ```bash
+./packet-lab.sh resume [--json|--verbose]  # fast read-only resume snapshot
+./packet-lab.sh preflight [--json]         # private env checks for the next step
 ./packet-lab.sh doctor                     # health check
 ./packet-lab.sh test | eval | demo         # tests / evals / end-to-end demo
 ./packet-lab.sh viewer [mode] [iface]      # the live tcpdump-backed viewer
@@ -454,7 +465,7 @@ increasingly, by the Curriculum Governor's structured state):
 
 | Command | What it does |
 |---|---|
-| `resume lesson` | Reads project docs, summarizes progress, states tonight's objective and scope, asks one warm-up question. |
+| `resume lesson` | Fast resume: acknowledges immediately, loads the snapshot (`./packet-lab.sh resume`), recaps in two sentences, asks one focused question. See [`docs/fast-resume.md`](docs/fast-resume.md). |
 | `scope?` | Lists tonight's declared step list; anything outside it is drift. |
 | `go ahead` / `move on` | Skips the current question in the same message (a skip waiver — never counted as mastery). |
 | `curiosity` | A short, complete detour, then straight back to the roadmap. |
