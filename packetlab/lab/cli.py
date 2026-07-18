@@ -4,6 +4,8 @@ One operator surface for the tutoring agent. Every guarded action flows
 governor.evaluate -> execute -> governor.commit, and every important step
 lands in the run trace. Commands are intentionally few and each does one thing.
 
+    python3 -m packetlab.lab resume [--json|--verbose]
+    python3 -m packetlab.lab preflight [--json]
     python3 -m packetlab.lab doctor
     python3 -m packetlab.lab lesson start|status|close|abort
     python3 -m packetlab.lab record prediction|observation|explanation|skip
@@ -95,6 +97,48 @@ def _out(obj) -> None:
 
 
 # ---- commands ------------------------------------------------------------
+
+def cmd_resume(args) -> int:
+    """Read-only resume snapshot: learner, lesson, next step, preflight advice.
+
+    This is the fast path a lesson resume starts with — one invocation, no
+    doctor, no tests, no network, no run creation, no state mutation.
+    """
+    from packetlab.lab import resume as resume_mod
+    snapshot = resume_mod.build_snapshot(state_dir=STATE_DIR)
+    if args.json:
+        _out(snapshot)
+    elif args.verbose:
+        print(resume_mod.render_verbose(snapshot))
+    else:
+        print(resume_mod.render_learner(snapshot))
+    return 0 if snapshot["status"] in ("resume", "fresh") else 1
+
+
+def cmd_preflight(args) -> int:
+    """Run the snapshot's recommended capability checks. PRIVATE output.
+
+    Presence/capability checks only — no packets, no learner-state writes.
+    Any representative live probe (e.g. a disposable-hostname dig) remains an
+    explicit assistant action guided by the plan this prints.
+    """
+    from packetlab.lab import preflight as preflight_mod
+    from packetlab.lab import resume as resume_mod
+    snapshot = resume_mod.build_snapshot(state_dir=STATE_DIR)
+    plan = snapshot.get("preflight",
+                        {"recommended": False, "outcome": "none_needed",
+                         "checks": []})
+    results = preflight_mod.run_checks(plan)
+    payload = {"private": True, "plan": plan, "results": results,
+               "learner_message_on_failure":
+                   preflight_mod.learner_message_for_failure(results)}
+    if args.json:
+        _out(payload)
+    else:
+        print("PRIVATE preflight diagnostics — do not show to the learner")
+        _out(payload)
+    return 0 if results["ok"] else 1
+
 
 def cmd_doctor(_args) -> int:
     from packetlab.lab import doctor
@@ -458,6 +502,16 @@ def build_parser() -> argparse.ArgumentParser:
                                      description="Packet Lab control plane")
     sub = parser.add_subparsers(dest="command", required=True)
 
+    resume = sub.add_parser("resume", help="fast read-only resume snapshot")
+    resume.add_argument("--json", action="store_true",
+                        help="machine-readable snapshot")
+    resume.add_argument("--verbose", action="store_true",
+                        help="learner view plus operator diagnostics")
+
+    pre = sub.add_parser("preflight",
+                         help="run private capability checks for the next step")
+    pre.add_argument("--json", action="store_true")
+
     sub.add_parser("doctor", help="documentation + consistency health check")
 
     lesson = sub.add_parser("lesson", help="lesson lifecycle")
@@ -536,6 +590,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 DISPATCH = {
+    "resume": cmd_resume, "preflight": cmd_preflight,
     "doctor": cmd_doctor, "lesson": cmd_lesson, "record": cmd_record,
     "run": cmd_run, "experiment": cmd_experiment, "tool": cmd_tool,
     "learner": cmd_learner, "inspect": cmd_inspect, "demo": cmd_demo,

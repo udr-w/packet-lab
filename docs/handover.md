@@ -73,7 +73,7 @@ ourselves — one protocol at a time, fully, before moving on.
   traces, and **per-learner isolation** (each engineer has an isolated profile
   under `state/learners/<id>/`; the active learner shows in every command and
   trace). Health: `python3 -m packetlab.lab doctor`; tests
-  (`./packet-lab.sh test`, 96) and evals (`./packet-lab.sh eval`, 32) pass. See
+  (`./packet-lab.sh test`, 133) and evals (`./packet-lab.sh eval`, 44) pass. See
   AGENTS.md ("Curriculum Governor" + "Multi-learner context isolation") and
   `docs/architecture.md`. This did NOT change lesson progress — DNS (v3.0) is
   still where it was.
@@ -84,6 +84,12 @@ ourselves — one protocol at a time, fully, before moving on.
   per TASK.md). Optional roadmap items (shared tool registry, profile renaming,
   namespace isolation, separate-model grader) are deferred, not pending — do not
   build them speculatively; let real lesson usage drive what's needed next.
+- **Fast resume (2026-07-18):** session resume now starts with ONE read-only
+  call — `./packet-lab.sh resume --json` — per the Fast Resume Protocol
+  (AGENTS.md Operating Modes; `.claude/skills/resume-lesson/SKILL.md`;
+  `docs/fast-resume.md`). No doctor/tests/doc sweep at resume; private
+  preflight only when the snapshot recommends it, using its disposable
+  target, never shown to the learner.
 - **Capture access: RESOLVED.** `setcap` on tcpdump confirmed applied; both
   assistant and student capture without sudo. Caveat: an apt upgrade of
   tcpdump resets it — check `getcap /usr/bin/tcpdump` if capture fails.

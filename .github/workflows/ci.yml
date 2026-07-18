@@ -35,6 +35,9 @@ jobs:
       - name: Control-plane conformance evals
         run: python3 -m packetlab.lab eval
 
+      - name: Resume benchmark (repository-controlled latency, no LLM)
+        run: python3 scripts/bench-resume.py
+
       - name: End-to-end demo (real execution, happy + failure paths)
         run: |
           python3 -m packetlab.lab demo

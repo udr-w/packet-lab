@@ -1,0 +1,131 @@
+[
+  {
+    "eval_id": "resume-concise-goal-oriented",
+    "category": "resume",
+    "description": "Default resume view: welcome, lesson, where they stopped, one next step — nothing else.",
+    "target": "resume.render",
+    "input": {
+      "learner": "udara",
+      "lesson_state": {
+        "lesson_id": "v3.0",
+        "run_id": "run-20260718-125634-fac679",
+        "closed": true,
+        "aborted": true,
+        "concept_phase": {"dns.resolution-chain": "theory"},
+        "stop_reasons": [{"ts": "2026-07-18T13:27:28+00:00", "reason": "Student had to leave for an urgent task before the first activity; no evidence recorded. Resume v3.0 at step 1."}]
+      }
+    },
+    "expect": {"status": "resume", "output_contains": ["Welcome back", "v3.0", "Next:"]}
+  },
+  {
+    "eval_id": "resume-no-operational-dump",
+    "category": "resume",
+    "description": "Default resume view leaks no run IDs, paths, doctor output, capability strings, or control-plane vocabulary.",
+    "target": "resume.render",
+    "input": {
+      "learner": "udara",
+      "lesson_state": {
+        "lesson_id": "v3.0",
+        "run_id": "run-20260718-125634-fac679",
+        "closed": true,
+        "concept_phase": {"dns.resolution-chain": "theory"},
+        "stop_reasons": []
+      }
+    },
+    "expect": {"not_contains": ["run-20260718", "state/learners", "doctor", "getcap", "cap_net_raw", "governor", "trace", "preflight"]}
+  },
+  {
+    "eval_id": "resume-no-roadmap-dump",
+    "category": "resume",
+    "description": "Resume does not dump the roadmap or upcoming lesson steps.",
+    "target": "resume.render",
+    "input": {
+      "learner": "udara",
+      "lesson_state": {"lesson_id": "v3.0", "closed": true, "concept_phase": {"dns.resolution-chain": "theory"}}
+    },
+    "expect": {"not_contains": ["v4.0", "v5.0", "TLS", "Docker"]}
+  },
+  {
+    "eval_id": "resume-preserves-open-prediction",
+    "category": "resume",
+    "description": "An unanswered prediction is restated as the learner's own words, keeping prediction-before-observation intact.",
+    "target": "resume.render",
+    "input": {
+      "learner": "udara",
+      "lesson_state": {"lesson_id": "v3.0", "closed": true, "concept_phase": {"dns.resolution-chain": "predicted"}},
+      "learner_model": {"version": 1, "concepts": {"dns.resolution-chain": {"state": "in_progress", "updated_at": "2026-07-04T20:00:00+00:00", "evidence": [{"ts": "2026-07-04T20:00:00+00:00", "kind": "prediction", "summary": "the second lookup is answered from cache", "lesson_id": "v3.0", "run_id": "run-x"}]}}}
+    },
+    "expect": {"output_contains": ["the second lookup is answered from cache", "observe"]}
+  },
+  {
+    "eval_id": "resume-does-not-reveal-preflight-or-expected-answer",
+    "category": "resume",
+    "description": "The learner view never contains the private preflight's probe target or a verified expected result.",
+    "target": "resume.render",
+    "input": {
+      "learner": "udara",
+      "lesson_state": {"lesson_id": "v3.0", "closed": true, "concept_phase": {"dns.resolution-chain": "theory"}}
+    },
+    "expect": {"not_contains": ["pl-preflight-", "disposable", "verified", "I already checked"]}
+  },
+  {
+    "eval_id": "resume-fresh-learner-clear",
+    "category": "resume",
+    "description": "A brand-new learner gets a clear first-lesson message, not an invented history.",
+    "target": "resume.render",
+    "input": {"learner": "newbie"},
+    "expect": {"status": "fresh", "output_contains": ["first lesson"]}
+  },
+  {
+    "eval_id": "resume-no-active-learner-clear",
+    "category": "resume",
+    "description": "No active learner produces a clear, jargon-free message.",
+    "target": "resume.render",
+    "input": {},
+    "expect": {"status": "no_active_learner", "output_contains": ["No learner profile"], "not_contains": ["state/", "Traceback"]}
+  },
+  {
+    "eval_id": "resume-verbose-has-diagnostics",
+    "category": "resume",
+    "description": "Operator verbose view exposes the machinery, clearly labelled as not for the learner.",
+    "target": "resume.render",
+    "input": {
+      "mode": "verbose",
+      "learner": "udara",
+      "lesson_state": {"lesson_id": "v3.0", "run_id": "run-20260718-125634-fac679", "closed": true, "concept_phase": {"dns.resolution-chain": "theory"}}
+    },
+    "expect": {"output_contains": ["run-20260718-125634-fac679", "not for the learner", "preflight"]}
+  },
+  {
+    "eval_id": "preflight-disposable-avoids-learner-target",
+    "category": "resume",
+    "description": "DNS preflight must plan a probe hostname different from every name reserved for the learner's experiment.",
+    "target": "preflight.plan",
+    "input": {"lesson_id": "v3.0", "next_phase": "theory", "reserved_targets": ["example.com", "wikipedia.org"]},
+    "expect": {"ok": true, "status": "lightweight", "output_contains": ["disposable_hostname", "after the learner's prediction"]}
+  },
+  {
+    "eval_id": "preflight-not-learner-evidence",
+    "category": "resume",
+    "description": "The plan itself states preflight is never learner evidence.",
+    "target": "preflight.plan",
+    "input": {"lesson_id": "v3.0", "next_phase": "theory"},
+    "expect": {"output_contains": ["never recorded as learner evidence"]}
+  },
+  {
+    "eval_id": "preflight-failure-honest-no-jargon",
+    "category": "resume",
+    "description": "A failed preflight yields an honest learner-facing message without implementation jargon or invented expected results.",
+    "target": "preflight.plan",
+    "input": {"lesson_id": "v3.0", "next_phase": "theory", "simulate_failure": true},
+    "expect": {"output_contains": ["isn't ready", "hasn't lost any progress"], "not_contains": ["getcap", "/usr/bin", "exit code"]}
+  },
+  {
+    "eval_id": "preflight-conversational-step-skipped",
+    "category": "resume",
+    "description": "When the next step is explaining an observation, no environment validation is planned at all.",
+    "target": "preflight.plan",
+    "input": {"lesson_id": "v3.0", "next_phase": "explained"},
+    "expect": {"status": "none_needed"}
+  }
+]

@@ -131,7 +131,52 @@ def _target_context_isolation(inp: dict) -> dict:
                 "output": a_context + " state=" + a.concept(concept).state}
 
 
+def _target_resume_render(inp: dict) -> dict:
+    """Build a learner state from the fixture, snapshot it, render a view.
+
+    Exercises the tutor's resume surface: the default view must be concise
+    and free of operational machinery; verbose is where diagnostics live.
+    """
+    from packetlab.lab import resume as resume_mod
+    from packetlab.lab.profiles import LearnerProfiles
+    from packetlab.lab.statefile import atomic_write_json
+    with tempfile.TemporaryDirectory() as d:
+        state = Path(d)
+        if inp.get("learner"):
+            profiles = LearnerProfiles(state)
+            profiles.create(inp["learner"])
+            ldir = profiles.learner_dir(inp["learner"])
+            if inp.get("lesson_state") is not None:
+                atomic_write_json(ldir / "lesson.json", inp["lesson_state"])
+            if inp.get("learner_model") is not None:
+                atomic_write_json(ldir / "learner.json", inp["learner_model"])
+        snapshot = resume_mod.build_snapshot(state_dir=state)
+        render = resume_mod.render_verbose if inp.get("mode") == "verbose" \
+            else resume_mod.render_learner
+        return {"status": snapshot["status"], "output": render(snapshot)}
+
+
+def _target_preflight_plan(inp: dict) -> dict:
+    """Plan (and optionally message a failed) private preflight."""
+    from packetlab.lab import preflight
+    lesson = curriculum_mod.load().lesson(inp["lesson_id"])
+    plan = preflight.plan(lesson, next_phase=inp.get("next_phase"),
+                          reserved_targets=tuple(inp.get("reserved_targets",
+                                                         [])))
+    disposable = plan.get("disposable_hostname", "")
+    contaminates = disposable and disposable in inp.get("reserved_targets", [])
+    output = json.dumps(plan)
+    if inp.get("simulate_failure"):
+        results = {"results": [{"id": "binary:tcpdump", "ok": False,
+                                "target": "/usr/bin/tcpdump"}]}
+        output = preflight.learner_message_for_failure(results)
+    return {"ok": not contaminates, "status": plan["outcome"],
+            "output": output}
+
+
 TARGETS = {
+    "resume.render": _target_resume_render,
+    "preflight.plan": _target_preflight_plan,
     "policy.check_command": _target_policy_check_command,
     "governor.evaluate": _target_governor_evaluate,
     "toolgen.validate": _target_toolgen_validate,

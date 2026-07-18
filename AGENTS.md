@@ -52,29 +52,79 @@ The code exists only to make Linux easier to observe.
 
 ---
 
-# Startup Procedure
+# Operating Modes
 
-Always begin by running `python3 scripts/lab-doctor.py` and reporting any WARN/FAIL before starting.
+Two modes. Pick by the request; default to learner mode. Never make learner
+mode pay repository-owner mode's startup cost.
 
-Then read:
+## Learner mode (default)
 
-1. README.md
-2. AGENTS.md
-3. ROADMAP.md
-4. TASK.md
-5. docs/handover.md
-6. the relevant docs/knowledge/*.md
-7. the current docs/lessons/vX.Y-*.md
+For: resume/continue a lesson, explain a concept, run an experiment, answer a
+prediction, inspect an observation. Priorities: respond within seconds, load
+the correct learner, identify the next step, verify only what is necessary,
+teach clearly, hide operational machinery, preserve lesson conditions.
 
-Then:
+On any resume-shaped request ("resume lesson", "continue lesson", "where did
+we stop"), follow the Fast Resume Protocol — the same protocol whether
+invoked in natural language or as `/resume-lesson`
+(`.claude/skills/resume-lesson/SKILL.md`):
 
-- summarize the current state,
-- summarize previous progress,
-- explain today's objective,
-- ask one conceptual question about the previous lesson,
-- wait for confirmation.
+1. Acknowledge the learner in one short sentence BEFORE any tool call.
+2. Run `./packet-lab.sh resume --json` — once. That snapshot IS the resume:
+   learner, lesson, where they stopped, the one next action, and whether
+   private preflight is worth doing.
+3. Only if the snapshot recommends it, validate privately and minimally
+   (`./packet-lab.sh preflight --json`; any live probe strictly per the
+   plan's contamination controls). If it will take more than a few seconds,
+   give one truthful status line first. Never show preflight output.
+4. Reply with: a brief welcome, the current lesson, one sentence on where
+   the learner stopped, and ONE focused question or action. No run IDs,
+   paths, doctor output, capability strings, roadmap dumps, or health
+   reports — those appear only on failure or when explicitly asked.
 
-Never begin coding first.
+Do NOT at resume time: run lab-doctor/doctor/tests/evals/demo, read
+README/ROADMAP/architecture docs or every lesson file, list other learners,
+start a lesson run, or run tcpdump/dig/ping/getcap by hand. Read TASK.md or
+the current docs/lessons file lazily — only once the identified next step
+actually needs its detail.
+
+## Repository-owner mode
+
+For engineering: implementation, architecture, audits, tests, evals,
+releases, CI, maintenance. Here the full startup is appropriate: run
+`python3 scripts/lab-doctor.py`, then read README.md, AGENTS.md, ROADMAP.md,
+TASK.md, docs/handover.md, and the relevant docs/knowledge and docs/lessons
+files before changing anything. Never begin coding first — and never run
+this procedure during a learner's lesson time.
+
+---
+
+# Canonical Learner State
+
+The control plane is the single source of truth for lesson progress:
+`state/learners/<id>/` read via `./packet-lab.sh resume`. Assistant chat
+memory (auto-memory, session summaries) is NEVER authoritative for mastery,
+predictions, unfinished phases, or curriculum position — it may support
+conversational continuity only. A fresh session with a valid active learner
+must never open with "no memory of a previous lesson"; it must resume from
+the snapshot. When memory and snapshot disagree, the snapshot wins.
+
+---
+
+# Private Preflight Validation
+
+Verifying the learner's real environment before asking a question is allowed
+and valuable — when the resume snapshot recommends it. Preflight MAY: check
+required binaries/capabilities, run one representative probe against a
+disposable target, detect environment drift, pick a safer experiment.
+Preflight MUST NOT: reveal the expected answer, display raw diagnostics by
+default, count as the learner's observation or evidence, advance mastery or
+governor phase, or warm/consume the state the learner is about to observe.
+For stateful experiments (DNS caches, ARP tables, conntrack): use the plan's
+disposable target, never the learner's; defer live probes until after the
+learner's prediction is recorded, immediately before their experiment. If
+validation fails or contradicts the lesson's assumptions, say plainly what
+that means for today's lesson — never invent expected results.
 
 ---
 
@@ -321,13 +371,11 @@ Update the repository instead.
 
 ## resume lesson
 
-Read all project documentation.
-
-Summarize progress.
-
-Explain today's objective.
-
-Ask one conceptual question before continuing.
+Follow the Fast Resume Protocol (see Operating Modes → Learner mode):
+acknowledge immediately, one `./packet-lab.sh resume --json`, optional
+minimal private preflight, then a concise recap and ONE question. Do not
+read all project documentation, dump the roadmap, or report repository
+health.
 
 ---
 
