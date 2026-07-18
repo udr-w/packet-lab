@@ -1,0 +1,80 @@
+name: Lesson or teaching feedback
+description: Report confusion, difficulty, or curriculum drift in a Packet Lab lesson
+title: "[Lesson Feedback] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Packet Lab's teaching.
+
+        Please describe the learning problem rather than only suggesting a code change.
+        Remove secrets and private packet data before submitting.
+
+  - type: input
+    id: lesson-id
+    attributes:
+      label: Lesson ID
+      description: Enter the lesson or exercise identifier.
+      placeholder: v3.0-dns-01
+    validations:
+      required: true
+
+  - type: input
+    id: concept
+    attributes:
+      label: Concept being learned
+      description: What networking, Linux, or operating-system concept were you studying?
+      placeholder: DNS resolution and recursive queries
+    validations:
+      required: true
+
+  - type: textarea
+    id: confusion
+    attributes:
+      label: What was confusing?
+      description: Explain where the lesson stopped making sense or became difficult to follow.
+      placeholder: |
+        I understood that the resolver sends a DNS query, but I could not understand
+        why multiple servers may be involved before the final response returns.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-explanation
+    attributes:
+      label: Expected explanation or behaviour
+      description: What explanation, experiment, or behaviour would have helped?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: lesson-experience
+    attributes:
+      label: How did the lesson feel?
+      options:
+        - Too easy
+        - About right
+        - Too difficult
+        - Drifted away from the lesson goal
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: trace
+    attributes:
+      label: Relevant sanitized trace
+      description: |
+        Include relevant commands, packet summaries, or output after removing
+        secrets and private packet data. Leave blank when no trace is relevant.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy-confirmation
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed secrets and private packet data from this report.
+          required: true
