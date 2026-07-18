@@ -1,0 +1,73 @@
+name: resume benchmark
+
+# The regular CI workflow catches regressions on every change. This workflow
+# also publishes a dated result from main so the public reference metrics do
+# not depend on an old local run.
+on:
+  schedule:
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: resume-benchmark-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Verify benchmarked resume paths
+        run: python3 -m unittest tests.test_resume tests.test_preflight
+
+      - name: Run deterministic resume benchmark
+        id: benchmark
+        shell: bash
+        run: |
+          if python3 scripts/bench-resume.py > resume-benchmark.json 2> resume-benchmark.log; then
+            status=0
+          else
+            status=$?
+          fi
+          cat resume-benchmark.json
+          cat resume-benchmark.log >&2
+          exit "$status"
+
+      - name: Publish benchmark summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Resume benchmark"
+            echo
+            echo "Commit: \`$GITHUB_SHA\`"
+            echo
+            if [[ -s resume-benchmark.json ]]; then
+              echo '```json'
+              cat resume-benchmark.json
+              echo '```'
+            else
+              echo "No JSON report was produced. See the benchmark log."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload benchmark report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: resume-benchmark-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            resume-benchmark.json
+            resume-benchmark.log
+          if-no-files-found: error
+          retention-days: 90

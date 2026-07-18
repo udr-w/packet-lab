@@ -199,4 +199,6 @@ never the raw learner identity) is a **Planned** reviewed step, not automatic.
 Provenance stored today carries no learner id (verified by
 `tests/test_profiles.py::test_13`).
 
-The lifecycle is covered by the repository's test and eval suites (96 unit tests, 32 conformance evals, all passing; run the evals with `python3 -m packetlab.lab eval`).
+The lifecycle is covered by the repository's test and eval suites (163 unit
+tests and 54 conformance evals, all passing; run them with
+`./packet-lab.sh test` and `./packet-lab.sh eval`).

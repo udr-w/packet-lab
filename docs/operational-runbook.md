@@ -48,8 +48,8 @@ tampering after the fact rather than preventing it.
 git clone <repo-url> packet-lab
 cd packet-lab
 ./packet-lab.sh doctor    # health check: doc caps + curriculum/ROADMAP consistency
-./packet-lab.sh test      # 96 unit tests over the safety mechanisms
-./packet-lab.sh eval      # 32 control-plane conformance evals
+./packet-lab.sh test      # 163 unit tests over the safety mechanisms
+./packet-lab.sh eval      # 54 control-plane conformance evals
 ./packet-lab.sh demo      # scripted end-to-end run with real command execution
 ```
 
@@ -67,8 +67,8 @@ Python CLI verbatim.
 | Command | What it does |
 |---|---|
 | `./packet-lab.sh doctor` | Doc size caps, curriculum/ROADMAP consistency, terminology check. Exit 1 on any FAIL. |
-| `./packet-lab.sh test` | `python3 -m unittest discover -s tests` — the 96 safety-mechanism tests. |
-| `./packet-lab.sh eval` | The 32 conformance evals (`evals/run_evals.py`). |
+| `./packet-lab.sh test` | `python3 -m unittest discover -s tests` — the 163 safety-mechanism tests. |
+| `./packet-lab.sh eval` | The 54 conformance evals (`evals/run_evals.py`). |
 | `./packet-lab.sh demo [--failure]` | Scripted end-to-end run; `--failure` demonstrates denial/recovery paths. |
 | `./packet-lab.sh viewer [mode] [iface]` | Live tcpdump-backed viewer (`scripts/packetlab.py`). Modes: `icmp` (default), `arp`. Needs `python3-rich`. |
 | `./packet-lab.sh <anything else>` | Forwarded to `python3 -m packetlab.lab`. |

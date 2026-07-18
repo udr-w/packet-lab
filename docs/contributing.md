@@ -22,8 +22,8 @@ principles) and the control-plane discipline (safety in code, not prompts).
 
 ```bash
 python3 -m packetlab.lab doctor      # docs caps + curriculum/ROADMAP consistency + terminology
-./packet-lab.sh test                 # 96 unit tests
-./packet-lab.sh eval                 # 32 conformance evals
+./packet-lab.sh test                 # 163 unit tests
+./packet-lab.sh eval                 # 54 conformance evals
 ```
 
 All three must pass (non-zero exit fails CI). If you touched a lesson's status,

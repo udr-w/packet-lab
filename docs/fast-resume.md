@@ -158,6 +158,15 @@ no_op: waivers gate phases but are not learning evidence.
 cold-process snapshots across three learner shapes plus the preflight
 checks. Thresholds are coarse and stable: cold snapshot FAIL > 3 s, warn
 > 1 s; warm FAIL > 1 s. Measured on the reference machine: warm ~1 ms
-median, cold process ~45 ms, capability preflight ~3 ms. The remaining
+median, cold process ~45 ms, capability preflight in low-single-digit
+milliseconds. The remaining
 resume latency budget is model latency (one acknowledgement turn + one
 snapshot turn + the teaching reply), outside repository control.
+
+CI runs the benchmark on every change. The
+[`resume benchmark`](../.github/workflows/resume-benchmark.yml) workflow also
+runs weekly and on manual dispatch, then publishes the environment-stamped
+JSON output as both a job summary and a 90-day artifact. Each report therefore
+identifies when, where, and with which Python version the current metrics were
+measured; it does not rewrite documentation from a potentially noisy hosted
+runner.

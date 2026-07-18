@@ -23,7 +23,9 @@ Exit 1 on FAIL, 0 otherwise.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import json
+import platform
 import statistics
 import subprocess
 import sys
@@ -148,7 +150,17 @@ def bench_preflight() -> dict:
 
 
 def main() -> int:
-    report: dict = {"snapshot": {}, "preflight": {}}
+    report: dict = {
+        "metadata": {
+            "schema_version": 1,
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(
+                timespec="seconds"),
+            "python_version": platform.python_version(),
+            "platform": platform.platform(),
+        },
+        "snapshot": {},
+        "preflight": {},
+    }
     problems: list[str] = []
 
     with tempfile.TemporaryDirectory() as d:

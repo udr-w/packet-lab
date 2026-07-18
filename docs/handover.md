@@ -71,7 +71,7 @@ ourselves — one protocol at a time, fully, before moving on.
   traces, and **per-learner isolation** (each engineer has an isolated profile
   under `state/learners/<id>/`; the active learner shows in every command and
   trace). Health: `python3 -m packetlab.lab doctor`; tests
-  (`./packet-lab.sh test`, 161) and evals (`./packet-lab.sh eval`, 54) pass. See
+  (`./packet-lab.sh test`, 163) and evals (`./packet-lab.sh eval`, 54) pass. See
   AGENTS.md ("Curriculum Governor" + "Multi-learner context isolation") and
   `docs/architecture.md`. This did NOT change lesson progress — DNS (v3.0) is
   still where it was.

@@ -160,6 +160,13 @@ def _happy_path(gov, trace, learner, workspace, tmp) -> int:
     gov.commit(action, outcome=result.to_summary())
     print(f"ping ran: {result.status}")
 
+    if result.status != "ok":
+        gov.abort_lesson(f"guarded command failed with status {result.status}")
+        print(f"guarded command failed ({result.status}, exit {result.exit_code}); "
+              "no observation, explanation, or mastery was recorded")
+        _timeline(trace)
+        return 1
+
     obs = Action("record", concept_id=concept, phase="observed")
     gov.commit(obs)
     learner.add_evidence(concept, "observation",

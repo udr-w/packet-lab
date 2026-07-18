@@ -28,14 +28,14 @@ Reproducible today:
 
 | Metric | Value | Reproduce |
 |---|---|---|
-| Unit tests (safety mechanisms) | **161 passing** | `./packet-lab.sh test` |
+| Unit tests (safety mechanisms) | **163 passing** | `./packet-lab.sh test` |
 | Control-plane conformance evals | **54 passing** | `./packet-lab.sh eval` |
 | End-to-end demo (real execution) | success + failure paths | `./packet-lab.sh demo` / `--failure` |
 | Example run trace (hash-chain verified) | committed | `python3 -m packetlab.lab inspect --file docs/examples/trace-icmp-v1.1.jsonl --verify` |
 | Resume snapshot latency (measured, no LLM) | warm ~1 ms / cold process ~45 ms | `python3 scripts/bench-resume.py` |
 
-No benchmarks, accuracy percentages, or security guarantees are claimed — none
-would be reproducible, so none appear.
+No model-quality benchmark, accuracy percentage, or security guarantee is
+claimed — none would be reproducible, so none appear.
 
 ---
 
@@ -238,10 +238,11 @@ checksum, retention, and status. Detail:
 
 ## Evaluation and observability *(Implemented)*
 
-- **96 unit tests** over the safety mechanisms (accept + reject paths).
-- **32 conformance evals** across six categories — `alignment`, `tool_safety`,
-  `injection`, `recovery`, `teaching`, `personalization` — testing the
-  *enforcement points*, not model quality. A fixture is a JSON file, not code.
+- **163 unit tests** over the safety mechanisms (accept + reject paths).
+- **54 conformance evals** across eight categories — `alignment`, `closeout`,
+  `injection`, `personalization`, `recovery`, `resume`, `teaching`, and
+  `tool_safety` — testing the *enforcement points*, not model quality. A
+  fixture is a JSON file, not code.
   [`docs/evaluation-strategy.md`](docs/evaluation-strategy.md).
 - **Hash-chained JSONL traces**: `lab inspect <run-id>` (with `--timeline` /
   `--verify`) reconstructs a run from objective to mastery result. Replay is
@@ -318,7 +319,10 @@ active learner's position (lesson, where they stopped, the one next action,
 whether private preflight is worth doing) in a single call — no doctor run, no
 document sweep, no network. Learner state in `state/learners/<id>/` is
 canonical; assistant chat memory never is. Measured and CI-benchmarked
-(`scripts/bench-resume.py`). Detail:
+(`scripts/bench-resume.py`). A weekly and manually dispatchable
+[`resume benchmark`](.github/workflows/resume-benchmark.yml) workflow publishes
+an environment-stamped JSON report and public job summary so results stay
+dated and reproducible. Detail:
 [`docs/fast-resume.md`](docs/fast-resume.md).
 
 ---
@@ -334,7 +338,7 @@ git clone https://github.com/udr-w/packet-lab.git
 cd packet-lab
 
 ./packet-lab.sh doctor      # health: doc caps + curriculum/roadmap consistency
-./packet-lab.sh test        # 161 unit tests
+./packet-lab.sh test        # 163 unit tests
 ./packet-lab.sh eval        # 54 conformance evals
 ./packet-lab.sh demo        # scripted end-to-end run (real execution)
 ```

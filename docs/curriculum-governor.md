@@ -220,7 +220,7 @@ that is "complete" in one file and "planned" in the other cannot slip through.
 
 ## Verification
 
-- `tests/test_governor.py` (part of the 96-test suite) covers the four
+- `tests/test_governor.py` (part of the 163-test unit suite) covers the four
   properties directly: **Drift** (out-of-scope topics and ungranted categories
   denied, in-scope allowed), **Phases** (observe-before-predict denied, the
   full predicted→observed→explained walk, skip waiver satisfying a gate),
@@ -228,7 +228,7 @@ that is "complete" in one file and "planned" in the other cannot slip through.
   spend nothing), **Lifecycle** (planned lessons cannot start, closing
   requires completion criteria, no-lesson denies everything, and every
   decision lands in a verifiable trace chain).
-- The conformance evals (`python3 -m packetlab.lab eval`, 32 evals, all
+- The conformance evals (`python3 -m packetlab.lab eval`, 54 evals, all
   passing) exercise the Governor from outside the unit tests: the five
   `alignment` fixtures (out-of-scope refusal, in-scope allowance, ungranted
   category refusal, predict-before-observe, step-budget stop) and the four

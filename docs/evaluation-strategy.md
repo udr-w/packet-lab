@@ -3,12 +3,12 @@
 Packet Lab is one reasoning agent bounded by a deterministic control plane
 (`packetlab/lab/`). Testing follows that split: everything deterministic is
 tested mechanically, and we are explicit about the part that is not. There are
-two layers today — 96 unit tests and 32 control-plane conformance evals, all
+two layers today — 163 unit tests and 54 control-plane conformance evals, all
 passing — and neither layer measures model quality. That is a deliberate
 scoping decision, not an omission, and this document says exactly where the
 line sits.
 
-## Layer 1: Unit tests (`tests/`, 96 tests)
+## Layer 1: Unit tests (`tests/`, 163 tests)
 
 The unit tests cover the deterministic safety mechanisms module by module.
 Every mechanism is tested on **both sides**: an accept path proving legitimate
@@ -25,6 +25,12 @@ blocks nothing.
 | `test_runner.py` | Wall-clock deadline (primary), rlimit backstops, output caps, no-root refusal, scrubbed environment, process-group kill |
 | `test_toolgen.py` | The lookup → validate → test → register → invoke → cleanup pipeline, sha256 TOCTOU guard, provenance records |
 | `test_specs_learner_untrusted.py` | Strict `ToolSpec`/`ExperimentSpec` validation, learner state transitions and evidence rules, untrusted-data wrapping and marker defanging |
+| `test_profiles.py` | Per-learner state isolation, active-profile selection, migration, and provenance privacy |
+| `test_resume.py` | One-call read-only snapshots, curriculum-derived next prompts, concise rendering, and no network or state side effects |
+| `test_preflight.py` | Private capability planning, disposable targets, honest failure rendering, and no learner-state mutation |
+| `test_closeout.py` | Proportional session classification and persistence policy for no-op, evidence, milestone, and engineering work |
+| `test_cli_integration.py` | Governor/learner observation synchronisation and experiment-policy validation |
+| `test_demo.py` | End-to-end demo failure boundaries: failed guarded commands cannot mint evidence or mastery |
 
 Run them:
 
@@ -34,7 +40,7 @@ Run them:
 
 Non-zero exit on any failure.
 
-## Layer 2: Control-plane conformance evals (`evals/`, 32 evals)
+## Layer 2: Control-plane conformance evals (`evals/`, 54 evals)
 
 Be clear about what these are: **integration tests over the enforcement
 points, dressed in a data-fixture envelope.** They call the real `policy`,
@@ -56,9 +62,9 @@ Every fixture (in `evals/fixtures/<category>/*.json`) is a JSON object:
 ```json
 {
   "eval_id": "unique-slug",
-  "category": "alignment | tool_safety | injection | recovery | teaching",
+  "category": "alignment",
   "description": "One sentence: what this proves.",
-  "target": "policy.check_command | governor.evaluate | toolgen.validate | runner.run_restricted | untrusted.render",
+  "target": "governor.evaluate",
   "input": { "...target-specific..." },
   "expect": {
     "allowed": true,
@@ -81,11 +87,16 @@ the enforcement point under test:
 | `toolgen.validate` | Spec validation + capability policy + AST check of tool **and** test source |
 | `runner.run_restricted` | Actual restricted execution: deadline, output cap, structured failure statuses |
 | `untrusted.render` | Untrusted-data wrapping, sanitisation, injection-pattern flagging |
+| `learner.state` | Deterministic mastery derivation from one learner's evidence |
+| `profiles.context_isolation` | Cross-learner context and evidence isolation |
+| `closeout.policy` | Proportional session classification and persistence decisions |
+| `resume.render` | Concise learner-facing snapshot rendering without operational leakage |
+| `preflight.plan` | Phase-aware private validation plans and contamination controls |
 
 A fixture that raises an exception counts as a failed eval, and the run exits
 non-zero if any eval fails.
 
-### The five categories
+### The eight categories
 
 **alignment** (5 evals) — the governor keeps the agent inside the declared
 lesson: out-of-scope concepts refused, in-scope allowed, unpermitted command
@@ -102,10 +113,11 @@ categories refused, phase order enforced, step budget stops further commands.
 }
 ```
 
-**tool_safety** (7 evals) — the toolgen validation gate: a clean stdlib tool
+**tool_safety** (10 evals) — the toolgen validation gate: a clean stdlib tool
 passes; `import os`, computed-string `getattr` reflection, path-traversal
-`open()`, third-party dependencies, network capability requests, and unsafe
-generated *test* files are all rejected before anything executes.
+`open()`, third-party dependencies, unsafe serialization imports, vacuous
+generated tests, network capability requests, and unsafe generated *test*
+files are all rejected before anything executes.
 
 ```json
 {
@@ -178,13 +190,28 @@ without fabricating mastery.
 }
 ```
 
+**closeout** (9 evals) — proportional end-of-session handling: no-op and
+skip-only sessions do not create documentation or Git churn, evidence sessions
+may persist learning content locally, milestones receive a full closeout, and
+engineering work is delivered separately without leaking learner-private state.
+
+**personalization** (4 evals) — deterministic learner-state derivation and
+cross-learner isolation: fresh learners remain unseen, grounded evidence can
+reach mastery, and one learner's misconceptions or completion history never
+enter another learner's active context.
+
+**resume** (13 evals) — the one-call resume and private-preflight contracts:
+learner views stay concise and goal-oriented, unfinished predictions survive,
+operator diagnostics stay private, disposable targets avoid contaminating the
+learner's experiment, and preflight never becomes learner evidence.
+
 Run them:
 
 ```bash
 ./packet-lab.sh eval          # == python3 -m packetlab.lab eval
 ```
 
-Output is a per-category pass count plus a total (`25/32 evals passed`), with
+Output is a per-category pass count plus a total (`54/54 evals passed`), with
 non-zero exit on any failure.
 
 ## What these evals do NOT prove
@@ -211,7 +238,7 @@ than the name suggests.
   anything is a judgment call no substring assertion can make.
 - **The alignment evals do not measure whether the agent *wants* to stay in
   scope.** They measure that the governor refuses when it doesn't.
-- **Passing 32/32 is a conformance statement, not a benchmark.** There is no
+- **Passing 54/54 is a conformance statement, not a benchmark.** There is no
   comparison against anything, no statistical claim, and no adversarial model
   in the loop.
 
@@ -229,8 +256,8 @@ than the name suggests.
 ## Quick reference
 
 ```bash
-./packet-lab.sh test                 # 96 unit tests (safety mechanisms)
-./packet-lab.sh eval                 # 32 control-plane conformance evals
+./packet-lab.sh test                 # 163 unit tests (safety mechanisms)
+./packet-lab.sh eval                 # 54 control-plane conformance evals
 python3 -m packetlab.lab eval        # same as above, direct form
 ```
 
