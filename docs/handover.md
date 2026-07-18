@@ -62,6 +62,16 @@ ourselves — one protocol at a time, fully, before moving on.
   state givens completely, using only already-taught distinctions), and the
   Pacing rules — read all before teaching. The end-lesson wrap-up must end
   with the ROADMAP.md progress percentage as its final line.
+- **Control plane (added in an engineering session, not a lesson):** a
+  deterministic control plane lives in `packetlab/lab/`, driven by
+  `python3 -m packetlab.lab ...` (or `./packet-lab.sh`). It provides the
+  Curriculum Governor (lesson state machine, scope, budgets), the learner
+  model, the restricted runner, the generated-tool lifecycle, and hash-chained
+  run traces. See the new AGENTS.md "Curriculum Governor" section for how to
+  use it during a lesson, and `docs/architecture.md` for the full picture.
+  Verify health with `python3 -m packetlab.lab doctor`; tests
+  (`./packet-lab.sh test`, 96) and evals (`./packet-lab.sh eval`, 32) pass.
+  This did not change lesson progress — DNS (v3.0) is still where it was.
 - **Capture access: RESOLVED.** `setcap` on tcpdump confirmed applied; both
   assistant and student capture without sudo. Caveat: an apt upgrade of
   tcpdump resets it — check `getcap /usr/bin/tcpdump` if capture fails.
