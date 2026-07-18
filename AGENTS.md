@@ -248,6 +248,65 @@ If implementation work no longer improves understanding, stop coding and continu
 
 ---
 
+# Curriculum Governor (control plane)
+
+A deterministic control plane now backs the teaching rules above. It lives in
+`packetlab/lab/` and is driven through one CLI: `python3 -m packetlab.lab ...`
+(or `./packet-lab.sh`). The rules in this file remain the teaching contract; the
+control plane makes the safety-sensitive parts enforceable and inspectable
+rather than prompt-dependent.
+
+Use it, do not bypass it:
+
+- **Lesson state goes through the CLI.** Start a session with `lab lesson start
+  <id>`; record learner evidence with `lab record prediction|observation|
+  explanation|skip <concept> --text "..."`; close with `lab lesson close
+  --confirm "<criterion>"`. This keeps `state/lesson.json`, the learner model,
+  and the run trace consistent, and it is what makes a run inspectable.
+- **Guarded commands go through `lab run --category <c> -- <argv...>`**, which
+  checks the Governor (scope, budget, phase), then the command policy
+  (allow-list, no shell), then executes under the restricted runner and wraps
+  the output as untrusted data. Do not run lesson experiments through a raw
+  shell when a category exists for them.
+- **A student "go ahead"/"move on" is a skip waiver**: `lab record skip
+  <concept>`. It satisfies the phase gate without counting as mastery — this is
+  how the Pacing rule and the phase machine coexist.
+- **Generated tools are untrusted.** Search first (`lab tool lookup`), and only
+  generate when nothing fits; validate and test before invoking (`lab tool
+  validate`, then `invoke`). Never widen the AST allow-list to make a tool pass.
+- **Inspect and verify** a run with `lab inspect <run-id> --timeline` /
+  `--verify`. The trace is the audit record; the verifier detects tampering.
+- **`lab doctor`** checks doc size caps, curriculum/ROADMAP consistency, and
+  single-agent terminology. Run it before closing a lesson.
+
+The control plane is engineering infrastructure; building or changing it happens
+in dedicated engineering sessions, never during a learner's lesson time. During
+a lesson, keep CLI overhead to roughly one `lab` invocation per student-visible
+action so the Pacing rules are honoured.
+
+## Multi-learner context isolation (hard rule)
+
+Packet Lab is a multi-learner product. Every learner has an isolated profile
+under `state/learners/<id>/`, and the active learner is shown in command output
+and every trace event. When starting or resuming a lesson, the assistant's
+context must contain ONLY:
+
+- the **selected** learner's relevant mastery state,
+- the **selected** learner's recent educational evidence,
+- the current lesson,
+- shared curriculum and policies,
+- explicitly selected anonymized examples, when useful.
+
+It must NEVER contain another learner's predictions, explanations,
+misconceptions, mastery state, lesson history, identity, or unredacted trace
+content. Committed example evidence (e.g. `docs/examples/`, labelled
+`learner-example`) is historical demonstration data — never load it into a live
+learner's active context or treat it as their progress. Always confirm the
+active learner (it is in every command's output) before recording anything, so
+one learner's answers can never land in another's profile.
+
+---
+
 # Repository Memory
 
 The repository is the source of truth.
