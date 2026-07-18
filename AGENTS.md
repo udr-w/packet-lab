@@ -104,9 +104,9 @@ Frequently ask:
 
 before running experiments.
 
-Before asking a prediction question, define every technical term or interface name the question depends on (e.g. explain what `lo` is before asking a question about it). The student confirmed this ordering works well — jargon-first prediction questions caused confusion in the 1.2 loopback lesson.
+Before asking a prediction question, define every technical term or interface name the question depends on (e.g. explain what `lo` is before asking a question about it). Jargon-first prediction questions — asking before the necessary terms are defined — cause confusion and produce wrong answers that reflect the question, not the student's understanding. Always define first, then ask.
 
-## Question quality (standing directive from the student, 2026-07-04)
+## Question Quality
 
 A prediction or synthesis question must be complete and unambiguous:
 
@@ -136,7 +136,7 @@ Explain the engineering trade-offs.
 
 ---
 
-# Evidence Visibility (standing directive from the student, 2026-07-04)
+# Evidence Visibility
 
 The student sees ONLY the assistant's messages and their own terminal. The
 assistant's shell runs, background captures, and tool calls are invisible to
@@ -156,7 +156,7 @@ them.
 
 ---
 
-# Pacing (anti-drift — standing directive from the student, 2026-07-04)
+# Pacing (anti-drift)
 
 The student's time is scarce; lessons run late at night. Depth per concept, but
 zero padding around it.
@@ -198,7 +198,7 @@ The assistant's job:
 
 This is a standing instruction. Do not ask the student to confirm it again.
 
-Capture access: RESOLVED. `setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump` is applied and verified working — the assistant runs tcpdump and the viewer directly, without sudo, and must independently verify every capture experiment itself rather than relying only on the student's report. The student also no longer needs sudo for the viewer. Caveat: an `apt upgrade` of tcpdump resets the capability; if capture fails, check `getcap /usr/bin/tcpdump` and ask the student to re-apply.
+Capture access: `setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump` is applied, so the assistant runs tcpdump and the viewer directly, without sudo, and must independently verify every capture experiment itself rather than relying only on the student's report. The student also does not need sudo for the viewer. Caveat: an `apt upgrade` of tcpdump resets the capability; if capture fails, check `getcap /usr/bin/tcpdump` and ask the student to re-apply.
 
 ---
 
@@ -214,7 +214,7 @@ Preserve raw packet data.
 
 Never use a library that hides the networking concept currently being learned.
 
-## Human-readable output (standing directive from the student, 2026-07-04)
+## Human-Readable Output
 
 Every script here is a learning instrument, not a professional tracing tool.
 Any value a script prints that a human cannot read at a glance — MAC
@@ -245,6 +245,65 @@ Do not move to the next protocol until:
 - TASK.md marks the milestone complete.
 
 If implementation work no longer improves understanding, stop coding and continue experimenting.
+
+---
+
+# Curriculum Governor (control plane)
+
+A deterministic control plane now backs the teaching rules above. It lives in
+`packetlab/lab/` and is driven through one CLI: `python3 -m packetlab.lab ...`
+(or `./packet-lab.sh`). The rules in this file remain the teaching contract; the
+control plane makes the safety-sensitive parts enforceable and inspectable
+rather than prompt-dependent.
+
+Use it, do not bypass it:
+
+- **Lesson state goes through the CLI.** Start a session with `lab lesson start
+  <id>`; record learner evidence with `lab record prediction|observation|
+  explanation|skip <concept> --text "..."`; close with `lab lesson close
+  --confirm "<criterion>"`. This keeps `state/lesson.json`, the learner model,
+  and the run trace consistent, and it is what makes a run inspectable.
+- **Guarded commands go through `lab run --category <c> -- <argv...>`**, which
+  checks the Governor (scope, budget, phase), then the command policy
+  (allow-list, no shell), then executes under the restricted runner and wraps
+  the output as untrusted data. Do not run lesson experiments through a raw
+  shell when a category exists for them.
+- **A student "go ahead"/"move on" is a skip waiver**: `lab record skip
+  <concept>`. It satisfies the phase gate without counting as mastery — this is
+  how the Pacing rule and the phase machine coexist.
+- **Generated tools are untrusted.** Search first (`lab tool lookup`), and only
+  generate when nothing fits; validate and test before invoking (`lab tool
+  validate`, then `invoke`). Never widen the AST allow-list to make a tool pass.
+- **Inspect and verify** a run with `lab inspect <run-id> --timeline` /
+  `--verify`. The trace is the audit record; the verifier detects tampering.
+- **`lab doctor`** checks doc size caps, curriculum/ROADMAP consistency, and
+  single-agent terminology. Run it before closing a lesson.
+
+The control plane is engineering infrastructure; building or changing it happens
+in dedicated engineering sessions, never during a learner's lesson time. During
+a lesson, keep CLI overhead to roughly one `lab` invocation per student-visible
+action so the Pacing rules are honoured.
+
+## Multi-learner context isolation (hard rule)
+
+Packet Lab is a multi-learner product. Every learner has an isolated profile
+under `state/learners/<id>/`, and the active learner is shown in command output
+and every trace event. When starting or resuming a lesson, the assistant's
+context must contain ONLY:
+
+- the **selected** learner's relevant mastery state,
+- the **selected** learner's recent educational evidence,
+- the current lesson,
+- shared curriculum and policies,
+- explicitly selected anonymized examples, when useful.
+
+It must NEVER contain another learner's predictions, explanations,
+misconceptions, mastery state, lesson history, identity, or unredacted trace
+content. Committed example evidence (e.g. `docs/examples/`, labelled
+`learner-example`) is historical demonstration data — never load it into a live
+learner's active context or treat it as their progress. Always confirm the
+active learner (it is in every command's output) before recording anything, so
+one learner's answers can never land in another's profile.
 
 ---
 
@@ -323,3 +382,20 @@ Automatically:
 Do not ask whether these files should be updated, and do not ask before committing.
 
 Perform them automatically.
+
+---
+
+## reset progress
+
+Purpose: restart the entire learning program from Version 1, discarding recorded progress. Use this for a full do-over — after a long break, when redoing the course, or when handing the repository to a new student.
+
+This is destructive to lesson history. Unlike `end lesson for today`, never run it automatically: always ask the student to confirm before archiving or removing anything.
+
+Once confirmed:
+
+1. Move existing docs/lessons/*.md and docs/knowledge/*.md into a dated archive folder, docs/archive/<date>/, rather than deleting them.
+2. Rewrite TASK.md fresh to the Version 1.1 (first lesson) template.
+3. Reset ROADMAP.md's Progress section to 0 / 12 versions complete, and mark every version's Status back to its start state: Version 1 becomes NEXT, all others NOT STARTED.
+4. Rewrite docs/handover.md's "Current state" block to a fresh no-lessons-yet state. Leave the "Student profile" section untouched — it describes the person, not progress.
+5. Run `python3 scripts/lab-doctor.py` and fix any FAIL.
+6. Do not auto-commit. Tell the student the repository is reset and ask them to review the archived files before committing.

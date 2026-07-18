@@ -1,0 +1,29 @@
+{
+  "id": "dns-cache-observed",
+  "lesson_id": "v3.0",
+  "objective": "Show that a repeated DNS lookup is served from the stub cache and never re-crosses the network.",
+  "prediction_prompt": "You will run dig twice for a name you have not looked up before, while a capture watches UDP port 53. What crosses the wire on the first dig, and on the second?",
+  "preconditions": [
+    "systemd-resolved stub is active at 127.0.0.53",
+    "the name has not been resolved recently (its cache entry has expired or never existed)"
+  ],
+  "steps": [
+    {"description": "First lookup: forces the question onto the network (stub cache miss).",
+     "category": "dns_query", "argv": ["dig", "+tries=1", "+time=2", "example.com"]},
+    {"description": "Second lookup: expect the stub cache to answer, keeping the radio silent.",
+     "category": "dns_query", "argv": ["dig", "+tries=1", "+time=2", "example.com"]}
+  ],
+  "expected_observations": [
+    "the first dig produces a UDP:53 query and a matching response (query id echoed)",
+    "the response carries a TTL that bounds how long caches may keep the answer",
+    "the second dig returns the same answer with no new packet on the radio"
+  ],
+  "data_to_collect": [
+    "the answer's TTL",
+    "the query id in question and response"
+  ],
+  "safety_class": "local_traffic",
+  "cleanup": [],
+  "reflection_prompt": "Where did the second answer come from, and why did the TTL matter to that decision?",
+  "mastery_evidence": ["dns.caching-ttl", "dns.query-id-matching"]
+}

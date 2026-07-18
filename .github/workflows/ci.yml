@@ -1,0 +1,55 @@
+name: ci
+
+# Deterministic CI only. There is no model call anywhere in this pipeline —
+# agent-facing behaviour is covered by fixture-based conformance evals, not by
+# a live model. See docs/evaluation-strategy.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Byte-compile (syntax check)
+        run: python3 -m compileall -q packetlab/ scripts/ evals/ tests/
+
+      - name: Documentation health, curriculum/roadmap consistency, terminology
+        run: python3 -m packetlab.lab doctor
+
+      - name: Unit tests (safety mechanisms)
+        run: python3 -m unittest discover -s tests
+
+      - name: Control-plane conformance evals
+        run: python3 -m packetlab.lab eval
+
+      - name: End-to-end demo (real execution, happy + failure paths)
+        run: |
+          python3 -m packetlab.lab demo
+          python3 -m packetlab.lab demo --failure
+
+      - name: Verify the committed example trace's hash chain
+        run: |
+          python3 - <<'PY'
+          from packetlab.lab.trace import verify_chain
+          from pathlib import Path
+          ok, problems = verify_chain(Path("docs/examples/trace-icmp-v1.1.jsonl"))
+          assert ok, problems
+          print("example trace chain verified")
+          PY
+
+      - name: Secret scan (lightweight)
+        run: |
+          if git grep -nEI '(-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|xox[baprs]-[0-9A-Za-z-]+)' -- . ':(exclude).github/*'; then
+            echo "possible secret found"; exit 1
+          fi
+          echo "no obvious secrets"

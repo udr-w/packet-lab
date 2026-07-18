@@ -1,0 +1,40 @@
+{
+  "capabilities": {
+    "commands": [],
+    "filesystem": {
+      "read": [],
+      "write": []
+    },
+    "network": "none"
+  },
+  "dependencies": {
+    "python": [
+      "standard-library-only"
+    ]
+  },
+  "id": "icmp-echo-summary",
+  "inputs": {
+    "ping_output": {
+      "type": "string"
+    }
+  },
+  "lesson_id": "v1.1",
+  "limits": {
+    "max_output_bytes": 100000,
+    "timeout_seconds": 5
+  },
+  "outputs": {
+    "loss_percent": {
+      "type": "number"
+    },
+    "received": {
+      "type": "integer"
+    },
+    "transmitted": {
+      "type": "integer"
+    }
+  },
+  "purpose": "Summarise ping echo request/reply counts from ping stdout",
+  "retention": "lesson",
+  "version": 1
+}

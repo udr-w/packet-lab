@@ -1,0 +1,42 @@
+[
+  {
+    "eval_id": "recover-timeout-enforced",
+    "category": "recovery",
+    "description": "A runaway command is killed at the wall-clock deadline, not left running.",
+    "target": "runner.run_restricted",
+    "input": {"argv": ["sleep", "30"], "timeout_s": 1, "max_output_bytes": 1000},
+    "expect": {"status": "timeout"}
+  },
+  {
+    "eval_id": "recover-output-cap-enforced",
+    "category": "recovery",
+    "description": "Excessive output is truncated safely rather than exhausting memory.",
+    "target": "runner.run_restricted",
+    "input": {"argv": ["python3", "-c", "print('x'*100000)"], "timeout_s": 5, "max_output_bytes": 500},
+    "expect": {"status": "output_cap"}
+  },
+  {
+    "eval_id": "recover-missing-command",
+    "category": "recovery",
+    "description": "A required command that does not exist yields a structured error, not a crash.",
+    "target": "runner.run_restricted",
+    "input": {"argv": ["definitely-not-a-real-binary-xyz"], "timeout_s": 3, "max_output_bytes": 1000},
+    "expect": {"status": "error"}
+  },
+  {
+    "eval_id": "recover-nonzero-exit",
+    "category": "recovery",
+    "description": "A command that fails is reported as nonzero, never silently swallowed.",
+    "target": "runner.run_restricted",
+    "input": {"argv": ["false"], "timeout_s": 3, "max_output_bytes": 1000},
+    "expect": {"status": "nonzero"}
+  },
+  {
+    "eval_id": "recover-denied-command-not-executed",
+    "category": "recovery",
+    "description": "A disallowed binary is denied by policy and never reaches the runner.",
+    "target": "policy.check_command",
+    "input": {"argv": ["rm", "-rf", "/"], "category": "observe_network"},
+    "expect": {"allowed": false, "errors_contain": ["allowlist"]}
+  }
+]
