@@ -5,7 +5,12 @@
       "Bash(./packet-lab.sh preflight:*)",
       "Bash(./packet-lab.sh lesson end:*)",
       "Bash(./packet-lab.sh close:*)",
-      "Bash(./packet-lab.sh end:*)"
+      "Bash(./packet-lab.sh end:*)",
+      "Bash(./packet-lab.sh resume*)",
+      "Bash(./packet-lab.sh preflight*)",
+      "Bash(./packet-lab.sh lesson end*)",
+      "Bash(./packet-lab.sh close*)",
+      "Bash(./packet-lab.sh end*)"
     ]
   }
 }
