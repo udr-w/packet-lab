@@ -1,6 +1,10 @@
 __pycache__/
 *.py[cod]
 
+# Per-run control-plane state: lesson/learner state, run traces, workspaces.
+# Runtime data, never committed. Example traces are copied into docs/examples/.
+state/
+
 # Packet captures — may contain sensitive traffic (cleartext credentials,
 # cookies, tokens). Never commit. The capture/ dir is kept via .gitkeep.
 capture/*
@@ -8,3 +12,7 @@ capture/*
 *.pcap
 *.pcapng
 *.cap
+
+# Advisory lock files created by statefile.py next to state JSON
+.lock
+**/.lock
