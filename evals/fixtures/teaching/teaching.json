@@ -1,0 +1,42 @@
+[
+  {
+    "eval_id": "teach-prediction-gate-enforced",
+    "category": "teaching",
+    "description": "The prediction-before-observation enforcement point holds: an observation is refused until a prediction exists. This checks the deterministic gate, not the tutor's prose.",
+    "target": "governor.evaluate",
+    "input": {"lesson_id": "v1.1", "action": {"kind": "record", "concept_id": "icmp.echo-request-reply", "phase": "observed"}},
+    "expect": {"allowed": false, "errors_contain": ["predict-before-observe"]}
+  },
+  {
+    "eval_id": "teach-explanation-requires-observation",
+    "category": "teaching",
+    "description": "An explanation cannot be recorded before an observation for the concept.",
+    "target": "governor.evaluate",
+    "input": {
+      "lesson_id": "v1.1",
+      "commit_first": [{"kind": "record", "concept_id": "icmp.echo-request-reply", "phase": "predicted"}],
+      "action": {"kind": "record", "concept_id": "icmp.echo-request-reply", "phase": "explained"}
+    },
+    "expect": {"allowed": false, "errors_contain": ["observe-before-explain"]}
+  },
+  {
+    "eval_id": "teach-observation-allowed-after-prediction",
+    "category": "teaching",
+    "description": "The predict -> observe transition is permitted once a prediction is on record.",
+    "target": "governor.evaluate",
+    "input": {
+      "lesson_id": "v1.1",
+      "commit_first": [{"kind": "record", "concept_id": "icmp.echo-request-reply", "phase": "predicted"}],
+      "action": {"kind": "record", "concept_id": "icmp.echo-request-reply", "phase": "observed"}
+    },
+    "expect": {"allowed": true}
+  },
+  {
+    "eval_id": "teach-skip-waiver-honours-go-ahead",
+    "category": "teaching",
+    "description": "A student 'go ahead' is representable as a skip waiver that satisfies the gate without fabricating mastery.",
+    "target": "governor.evaluate",
+    "input": {"lesson_id": "v1.1", "action": {"kind": "record", "concept_id": "icmp.echo-request-reply", "phase": "skip"}},
+    "expect": {"allowed": true, "errors_contain": ["skip-waiver"]}
+  }
+]

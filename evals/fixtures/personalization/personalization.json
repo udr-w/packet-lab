@@ -1,0 +1,36 @@
+[
+  {
+    "eval_id": "personalize-fresh-learner-starts-unseen",
+    "category": "personalization",
+    "description": "A fresh learner with no evidence reads as 'unseen', so the tutor has a basis to run an initial assessment rather than assume prior knowledge.",
+    "target": "learner.state",
+    "input": {"concept": "dns.udp-53", "evidence": []},
+    "expect": {"status": "ok", "output_contains": ["unseen"]}
+  },
+  {
+    "eval_id": "personalize-experienced-not-forced-through-mastered",
+    "category": "personalization",
+    "description": "A learner whose own evidence shows observation + explanation reads as 'mastered', so lesson selection can skip already-mastered material.",
+    "target": "learner.state",
+    "input": {"concept": "dns.udp-53", "evidence": ["prediction", "observation", "explanation"]},
+    "expect": {"status": "ok", "output_contains": ["mastered"]}
+  },
+  {
+    "eval_id": "personalize-no-cross-learner-misconception-leak",
+    "category": "personalization",
+    "description": "Learner B's private misconception never appears in learner A's active context — the tutor cannot refer to another learner's misconceptions.",
+    "target": "profiles.context_isolation",
+    "input": {"concept": "dns.udp-53", "a_evidence": ["prediction"],
+              "b_evidence": ["evaluator_note"]},
+    "expect": {"status": "isolated", "not_contains": ["b-private"]}
+  },
+  {
+    "eval_id": "personalize-no-assumed-completion-from-history",
+    "category": "personalization",
+    "description": "A fresh learner A does not inherit learner B's completed-lesson evidence; A's context stays empty of B's mastery.",
+    "target": "profiles.context_isolation",
+    "input": {"concept": "dns.udp-53", "a_evidence": [],
+              "b_evidence": ["observation", "explanation"]},
+    "expect": {"status": "isolated", "not_contains": ["b-private"]}
+  }
+]

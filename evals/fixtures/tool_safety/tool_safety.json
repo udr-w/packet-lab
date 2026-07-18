@@ -1,0 +1,154 @@
+[
+  {
+    "eval_id": "tool-clean-accepted",
+    "category": "tool_safety",
+    "description": "A minimal stdlib parser tool passes validation.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "len-tool", "purpose": "length", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "import json, sys\nd = json.load(sys.stdin)\nprint(json.dumps({'n': len(d['x'])}))\n"
+    },
+    "expect": {"ok": true}
+  },
+  {
+    "eval_id": "tool-os-import-rejected",
+    "category": "tool_safety",
+    "description": "A tool importing os is rejected before execution.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "bad-os", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "import os\nos.system('id')\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["import of 'os'"]}
+  },
+  {
+    "eval_id": "tool-getattr-reflection-rejected",
+    "category": "tool_safety",
+    "description": "Computed-string getattr reflection is rejected.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "bad-reflect", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "x = 1\ngetattr(x, '__cla' + 'ss__')\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["getattr"]}
+  },
+  {
+    "eval_id": "tool-path-traversal-rejected",
+    "category": "tool_safety",
+    "description": "open() on a traversal path is rejected.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "bad-traverse", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "open('../../../etc/passwd').read()\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["open()"]}
+  },
+  {
+    "eval_id": "tool-undeclared-dependency-rejected",
+    "category": "tool_safety",
+    "description": "A third-party dependency declaration is rejected at the spec layer.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "bad-dep", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["requests"]}, "retention": "lesson"},
+      "source": "print(1)\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["not allowed"]}
+  },
+  {
+    "eval_id": "tool-unsafe-test-file-rejected",
+    "category": "tool_safety",
+    "description": "An unsafe generated TEST file is rejected too, not just the tool.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "bad-test", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "import json, sys\nprint(json.dumps({'n': 0}))\n",
+      "test_source": "import os\nos.system('id')\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["import of 'os'"]}
+  },
+  {
+    "eval_id": "tool-pickle-import-rejected",
+    "category": "tool_safety",
+    "description": "pickle (arbitrary code execution on load) is not on the import allow-list.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "bad-pickle", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "import pickle\npickle.loads(b'')\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["pickle"]}
+  },
+  {
+    "eval_id": "tool-marshal-import-rejected",
+    "category": "tool_safety",
+    "description": "marshal (code-object loading) is not on the import allow-list.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "bad-marshal", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "import marshal\nmarshal.loads(b'')\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["marshal"]}
+  },
+  {
+    "eval_id": "tool-lazy-test-rejected",
+    "category": "tool_safety",
+    "description": "A test that passes without exercising the tool is rejected, so a tool cannot register on a vacuous green.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "lazy-test", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "none"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "import json, sys\nprint(json.dumps({'n': 0}))\n",
+      "test_source": "import unittest\nimport tool\nclass T(unittest.TestCase):\n    def test(self): self.assertTrue(True)\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["exercise"]}
+  },
+  {
+    "eval_id": "tool-network-capability-rejected",
+    "category": "tool_safety",
+    "description": "A tool requesting network access is rejected by capability policy.",
+    "target": "toolgen.validate",
+    "input": {
+      "spec": {"id": "net-tool", "purpose": "x", "lesson_id": "v1.1",
+               "inputs": {"x": {"type": "string"}}, "outputs": {"n": {"type": "integer"}},
+               "capabilities": {"commands": [], "filesystem": {"read": [], "write": []}, "network": "outbound"},
+               "limits": {"timeout_seconds": 5, "max_output_bytes": 1000},
+               "dependencies": {"python": ["standard-library-only"]}, "retention": "lesson"},
+      "source": "print(1)\n"
+    },
+    "expect": {"ok": false, "errors_contain": ["network"]}
+  }
+]
